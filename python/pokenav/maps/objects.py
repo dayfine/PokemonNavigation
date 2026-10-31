@@ -15,7 +15,7 @@ import enum
 from typing import Dict, List, Set
 
 from pokenav.geometry import CLOCKWISE, Direction, Tile
-from pokenav.maps.model import WALL, MapGrid
+from pokenav.maps.model import WALL, GridMap2D
 from pokenav.maps.schema import MapFile, Npc, Sign, Wander
 from pokenav.movement import FLAT, ElevationRules, PlayerState, held_at
 
@@ -28,7 +28,7 @@ class Blocking(enum.Enum):
     ALL = "all"            #   also every tile a wanderer may stand on
 
 
-def sight_tiles(grid: MapGrid, npc: Npc, others: Set[Tile] = frozenset()) -> List[Tile]:
+def sight_tiles(grid: GridMap2D, npc: Npc, others: Set[Tile] = frozenset()) -> List[Tile]:
     """The tiles a trainer sees: a straight line in front of them, up to
     `npc.sight` tiles, ending before the first blocked cell, off-map tile or
     other object. Empty for an NPC who is not a trainer or faces no way."""
@@ -96,7 +96,7 @@ def with_static_npcs_as_walls(map_file: MapFile) -> MapFile:
     return walled
 
 
-def walls_around(grid: MapGrid, tile: Tile, rules: ElevationRules = FLAT,
+def walls_around(grid: GridMap2D, tile: Tile, rules: ElevationRules = FLAT,
                  objects: Set[Tile] = frozenset(), elevation: int = 0) -> List[Direction]:
     """The directions in which holding the stick on `tile` keeps the player
     there: the walls a walk can use to prove it stands on `tile`."""
@@ -104,7 +104,7 @@ def walls_around(grid: MapGrid, tile: Tile, rules: ElevationRules = FLAT,
     return [d for d in CLOCKWISE if held_at(grid, state, d, rules, objects)]
 
 
-def is_corner(grid: MapGrid, tile: Tile, rules: ElevationRules = FLAT,
+def is_corner(grid: GridMap2D, tile: Tile, rules: ElevationRules = FLAT,
               objects: Set[Tile] = frozenset(), elevation: int = 0) -> bool:
     """Whether `tile` has walls in two directions at right angles, so two
     walks (one into each) end on it from anywhere in a room: an anchor."""
