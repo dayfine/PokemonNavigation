@@ -2,6 +2,7 @@
   "format": "pokenav-map/1",
   "name": "Tiny Town",
   "game": "example",
+  "encounters": [],
   "legend": {
     "#": {"blocked": true},
     ".": {},
