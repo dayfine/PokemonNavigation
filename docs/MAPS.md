@@ -55,3 +55,30 @@ town = schema.load("docs/examples/tiny_town.json")
 town.point("DOORSTEP").tile        # Tile(x=1, y=1)
 schema.dump("out.json", town, {"#": WALL, ".": OPEN, "D": DOOR})
 ```
+
+## Text grids (`maps.textgrid`)
+
+The legend is one two-way table between characters and cell kinds
+(`textgrid.STANDARD`), used to read, write and show grids:
+
+| Char | Cell | Char | Cell |
+|---|---|---|---|
+| `#` | wall | `.` | open ground |
+| `"` | tall grass | `v ^ < >` | ledge, crossed south / north / west / east |
+| `D` | door (walk into) | `W` | warp (step onto) |
+| `S` | sign | `~` | water |
+| `=` | counter | `i` | ice |
+| `2 8 4 6` | forced move S / N / W / E | `?` | unknown |
+| `N` | an NPC on open ground (an object; the cell under it is `.`) | | |
+
+A `Legend` can add characters for NPCs facing a way, or other cell kinds;
+each character must stand for one kind and each kind have one character.
+
+The text format is rows of legend characters with `//` comments:
+`// Map: name`, named points as `//   NAME x y`, and an optional elevation
+layer after `// Elevation:`. Convert and show from the command line:
+
+```sh
+PYTHONPATH=python python3 -m pokenav.maps.textgrid show docs/examples/tiny_town.json
+PYTHONPATH=python python3 -m pokenav.maps.textgrid convert route.txt route.json
+```
