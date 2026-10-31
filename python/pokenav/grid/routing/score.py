@@ -5,7 +5,8 @@ is a vector:
 
 - `risk`: the open legs ("unprotected moves"), each counted as
   1 / (1 + margin), where its margin is how many tiles of extra error it
-  takes before the route fails. A wide margin makes an open leg cheap.
+  takes before the route fails. A wide margin makes an open leg cheap. D-pad
+  taps that land exactly (each checked by the bot) are not unprotected.
 - `localizations`: legs that shrink the belief (a wall or a ledge landing
   after an open leg). One is good; each one past `free_localizations` counts.
 - `turns` and `turnarounds` (a turn back the way the route came).
@@ -28,6 +29,7 @@ from typing import Dict, Iterable, List, Mapping, NamedTuple, Optional, Sequence
 from pokenav.grid.maps.world import Place, World
 from pokenav.grid.movement import WorldState
 from pokenav.grid.routing.belief import Belief, BeliefPlanner, Goal, LegEnd, PlannedLeg
+from pokenav.grid.routing.execution import Execution
 from pokenav.grid.routing.shortest import Costs, Move, MoveKind, Path, shortest_path
 
 #   The path weights `propose` tries: every pair of turn and grass weight,
@@ -80,7 +82,8 @@ class Ranked(NamedTuple):
 
 class Check(NamedTuple):
     """What the walker checks after a leg: the states it may be in, and what
-    proves it ("wall bump", "ledge landing", "map banner", or "none")."""
+    proves it ("wall bump", "ledge landing", "door fade", "tap count", "map
+    banner", or "none")."""
 
     leg: int
     expected: Belief
@@ -106,11 +109,13 @@ def replay(planner: BeliefPlanner, start: Iterable[WorldState], legs: Sequence[P
 
 def _walk_leg(planner: BeliefPlanner, belief: Belief, leg: PlannedLeg, extra: int) -> Optional[PlannedLeg]:
     if leg.end is LegEnd.WALL:
-        found = planner.wall_leg(belief, leg.direction)
+        found = planner.wall_leg(belief, leg.direction, leg.mode)
     elif leg.end is LegEnd.LEDGE:
-        found = planner.ledge_leg(belief, leg.direction)
+        found = planner.ledge_leg(belief, leg.direction, leg.mode)
+    elif leg.end is LegEnd.DOOR:
+        found = planner.door_leg(belief, leg.direction, leg.mode)
     else:
-        found = planner.open_leg(belief, leg.direction, leg.tiles, extra)
+        found = planner.open_leg(belief, leg.direction, leg.tiles, extra, leg.execution, leg.mode)
     return None if found is None else found[0]
 
 
@@ -123,7 +128,7 @@ def score(planner: BeliefPlanner, start: Iterable[WorldState], legs: Sequence[Pl
     if walked is None or not _reaches(walked, start, goal):
         return None
     risk = sum(1.0 / (1 + _margin(planner, start, legs, i, goal, options))
-               for i, leg in enumerate(walked) if _unprotected(leg, options))
+               for i, leg in enumerate(walked) if _unprotected(planner, leg, options))
     turns, turnarounds = _turns(walked)
     return RouteScore(
         risk=risk,
@@ -206,8 +211,15 @@ def legs_from_path(planner: BeliefPlanner, path: Path) -> Optional[List[PlannedL
 
 #   ---- parts of a score ----
 
-def _unprotected(leg: PlannedLeg, options: ScoreOptions) -> bool:
-    return leg.end is LegEnd.OPEN or (leg.end is LegEnd.LEDGE and not options.ledges_localize)
+def _unprotected(planner: BeliefPlanner, leg: PlannedLeg, options: ScoreOptions) -> bool:
+    if leg.end is LegEnd.OPEN:
+        return not _exact_taps(planner, leg)
+    return leg.end is LegEnd.LEDGE and not options.ledges_localize
+
+
+def _exact_taps(planner: BeliefPlanner, leg: PlannedLeg) -> bool:
+    """Whether `leg` is D-pad taps the error model says land exactly."""
+    return leg.execution is Execution.DPAD and planner.error(leg.execution, leg.mode).spread(leg.tiles) == 0
 
 
 def _margin(planner: BeliefPlanner, start: Belief, legs: Sequence[PlannedLeg], index: int, goal: Goal,
@@ -247,7 +259,7 @@ def _turns(legs: Sequence[PlannedLeg]) -> Tuple[int, int]:
 def _grass(planner: BeliefPlanner, before: Belief, leg: PlannedLeg) -> int:
     """The most grass any state crosses on `leg`."""
     walked = _walk_leg(planner, before, leg, 0)
-    if walked is None:
+    if walked is None or leg.end is LegEnd.DOOR:
         return 0
     worst = 0
     for state in before:
@@ -275,6 +287,10 @@ def _proof(before: Belief, leg: PlannedLeg) -> str:
         return "wall bump"
     if leg.end is LegEnd.LEDGE:
         return "ledge landing"
+    if leg.end is LegEnd.DOOR:
+        return "door fade"
+    if leg.execution is Execution.DPAD:
+        return "tap count"
     if maps_after != maps_before:
         return "map banner"
     return "none"

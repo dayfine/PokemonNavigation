@@ -9,11 +9,19 @@ chooses legs that keep it small:
   a wall all end on the row below it;
 - a **ledge** leg (hold until the first ledge hop lands) sends every state
   to the landing row, so a ledge drop pins the row just as a wall does;
-- an **open** leg (hold for about n tiles) spreads it: each state may end
-  anywhere from n - k to n + k tiles on, with k from an `OpenLegError`.
+- an **open** leg (about n tiles) spreads it: each state may end anywhere
+  from n - k to n + k tiles on. It is walked as counted D-pad taps or as a
+  timed stick hold (`routing.execution`), each with its own k from the
+  game's error model (`physics.model`): BDSP's taps are exact (k = 0), its
+  stick holds are not;
+- a **door** leg steps through the door ahead, into a loaded map or onto the
+  goal.
 
 A leg that may run into a door, off the loaded maps, into a person or onto
 unknown ground is refused: the plan could not tell where the player went.
+With a game's `ExecutionModel` the search also tracks the facing (a D-pad or
+door leg toward a new direction starts with a tap that only turns, which
+costs `turn_tap`) and, when the player has a bike, the mode.
 The search is Dijkstra over beliefs, refusing any belief larger than
 `max_spread`. Each planned leg says what proves it ended where planned (a
 wall bump, a ledge landing, or nothing for an open leg) and the set of
@@ -21,7 +29,7 @@ states it may leave the player in.
 
     plan = plan_belief(world, {start}, goal=Place("Route 202", Tile(30, 19)))
     for leg in plan:
-        print(describe(leg))   # "east to wall (4 tiles) -> Route 202 (30, 22)"
+        print(describe(leg))   # "clip east (4 tiles) -> Route 202 (30, 22)"
 """
 
 import enum
@@ -32,8 +40,12 @@ from typing import AbstractSet, Callable, Dict, FrozenSet, Iterable, List, Named
 from pokenav.grid.geometry import CLOCKWISE, Direction
 from pokenav.grid.maps.model import Behavior
 from pokenav.grid.maps.world import Place, World
-from pokenav.grid.movement import FLAT, HOLDING_REASONS, Blocked, ElevationRules, Hop, Moved, WorldState, world_step
+from pokenav.grid.movement import (
+    FLAT, HOLDING_REASONS, Blocked, ElevationRules, Hop, Moved, Warp, Warped, WorldState, world_step,
+)
+from pokenav.grid.routing.execution import TAPPED, Execution
 from pokenav.grid.routing.shortest import Costs
+from pokenav.physics.model import ExecutionModel, Mode, ModeModel
 
 Belief = FrozenSet[WorldState]
 
@@ -43,7 +55,8 @@ class LegEnd(enum.Enum):
 
     WALL = "wall"      #   held until the player is stopped: a wall bump
     LEDGE = "ledge"    #   held until a ledge hop lands: the landing
-    OPEN = "open"      #   held for a number of tiles: nothing proves it
+    OPEN = "open"      #   a number of tiles: nothing proves it, unless each tap is checked
+    DOOR = "door"      #   through the door ahead: the fade
 
 
 class OpenLegError(NamedTuple):
@@ -66,8 +79,11 @@ class OpenLegError(NamedTuple):
 class BeliefCosts(NamedTuple):
     """Leg costs for the robust planner. Each leg costs `per_leg` plus the
     path weights for its longest walk and its most grass, and `open_stop`
-    more if it ends in the open. `max_spread` is the most states a belief may
-    hold after a leg; `max_open_tiles` the longest open leg tried."""
+    more if it ends in the open on a timed hold or a tap that may miss.
+    `max_spread` is the most states a belief may hold after a leg;
+    `max_open_tiles` the longest open leg tried. `execution` is the game's
+    model of walking (see `physics.model`); without one the planner walks on
+    foot with stick holds whose error is `error`."""
 
     path: Costs = Costs()
     per_leg: float = 2.0
@@ -75,24 +91,36 @@ class BeliefCosts(NamedTuple):
     error: OpenLegError = OpenLegError()
     max_spread: int = 5
     max_open_tiles: int = 12
+    execution: Optional[ExecutionModel] = None
 
 
 class PlannedLeg(NamedTuple):
-    """A leg of a robust plan and the states it may leave the player in."""
+    """A leg of a robust plan, how it is walked, and the states it may leave
+    the player in."""
 
     direction: Direction
     end: LegEnd
-    tiles: int           #   open: the tiles to hold for; else the longest walk
+    tiles: int           #   open: the tiles to count; else the longest walk
     after: Belief
+    execution: Execution
+    mode: Mode = Mode.FOOT
+
+
+#   A search node: the belief, the facing (None: not known) and the mode.
+class _Node(NamedTuple):
+    belief: Belief
+    facing: Optional[Direction]
+    mode: Mode
 
 
 Goal = Union[Place, Callable[[WorldState], bool]]
 
 
 def describe(leg: PlannedLeg) -> str:
+    """A leg in words, e.g. "dpad west (20 tiles) -> Oreburgh City (2, 2)"."""
     places = ", ".join(str(state.place) for state in sorted_states(leg.after))
-    how = {LegEnd.WALL: "to wall", LegEnd.LEDGE: "to ledge landing", LegEnd.OPEN: "open"}[leg.end]
-    return "%s %s (%d tiles) -> %s" % (leg.direction.name.lower(), how, leg.tiles, places)
+    bike = "bike " if leg.mode is Mode.BIKE else ""
+    return "%s%s %s (%d tiles) -> %s" % (bike, leg.execution.value, leg.direction.name.lower(), leg.tiles, places)
 
 
 def sorted_states(states: Iterable[WorldState]) -> List[WorldState]:
@@ -113,6 +141,9 @@ class _Walk(NamedTuple):
 #   Why a walk stopped.
 HELD, LIMIT, HOPPED, ESCAPED = "held", "limit", "hopped", "escaped"
 
+#   How each leg end is walked when it is not counted.
+_UNCOUNTED = {LegEnd.WALL: Execution.CLIP, LegEnd.LEDGE: Execution.LEDGE}
+
 
 class BeliefPlanner:
     """Plans robust routes on one world with one set of rules and costs."""
@@ -125,71 +156,112 @@ class BeliefPlanner:
         self.objects = objects
         self._trajectories: Dict[Tuple[WorldState, Direction], Tuple[List[_Walk], str]] = {}
         self._open_tables: Dict[Tuple[WorldState, Direction], List[Optional[_Walk]]] = {}
+        self.model = costs.execution or ExecutionModel(foot=ModeModel(tile_cost=1.0, dpad=None, stick=costs.error))
+        self._longest = costs.max_open_tiles + max(error.spread(costs.max_open_tiles) for error in self._errors())
         #   Brings a belief larger than max_spread back to one state, as legs
         #   with their costs; None by default. See routing.localize.
         self.localizer: Optional[Callable[[Belief], Optional[List[Tuple[PlannedLeg, float]]]]] = None
 
     #   ---- legs from one belief ----
 
-    def legs_from(self, belief: Belief) -> Iterable[Tuple[PlannedLeg, float]]:
-        """Every leg the planner may take from `belief`, with its cost."""
-        for direction in CLOCKWISE:
-            for leg in (self.wall_leg(belief, direction), self.ledge_leg(belief, direction)):
-                if leg is not None:
-                    yield leg
-            yield from self.open_legs(belief, direction)
+    def legs_from(self, belief: Belief, modes: Iterable[Mode] = (Mode.FOOT,)) -> Iterable[Tuple[PlannedLeg, float]]:
+        """Every leg the planner may take from `belief` in `modes`, with its
+        cost (not counting turn taps or getting on or off the bike)."""
+        for mode in modes:
+            counted = [kind for kind in (Execution.DPAD, Execution.STICK_HOLD) if self.error(kind, mode) is not None]
+            for direction in CLOCKWISE:
+                for leg in (self.wall_leg(belief, direction, mode), self.ledge_leg(belief, direction, mode),
+                            self.door_leg(belief, direction, mode)):
+                    if leg is not None:
+                        yield leg
+                for kind in counted:
+                    yield from self.open_legs(belief, direction, kind, mode)
 
-    def wall_leg(self, belief: Belief, direction: Direction) -> Optional[Tuple[PlannedLeg, float]]:
+    def wall_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
         walks = [self.walk(state, direction) for state in belief]
         if any(w.outcome != HELD for w in walks) or max(w.tiles for w in walks) == 0:
             return None
-        return self._leg(direction, LegEnd.WALL, walks)
+        return self._leg(direction, LegEnd.WALL, walks, mode)
 
-    def ledge_leg(self, belief: Belief, direction: Direction) -> Optional[Tuple[PlannedLeg, float]]:
+    def ledge_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
         walks = [self.walk(state, direction, stop_on_hop=True) for state in belief]
         if any(w.outcome != HOPPED for w in walks):
             return None
-        return self._leg(direction, LegEnd.LEDGE, walks)
+        return self._leg(direction, LegEnd.LEDGE, walks, mode)
 
-    def open_legs(self, belief: Belief, direction: Direction) -> Iterable[Tuple[PlannedLeg, float]]:
+    def door_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
+        """A step through the door ahead of every state: each lands where the
+        warp leads, or, for a warp into a map not loaded, on the door tile.
+        None unless every state is in front of a door or warp."""
+        ends = []
+        for state in belief:
+            result = world_step(self.world, state, direction, self.rules, self.objects)
+            if not isinstance(result, (Warp, Warped)):
+                return None
+            ends.append(_pressed_to(state, result))
+        cost = self.costs.per_leg + self.costs.path.tile * self.model.mode(mode).tile_cost + self.model.door
+        return PlannedLeg(direction, LegEnd.DOOR, 1, frozenset(ends), Execution.DOOR, mode), cost
+
+    def error(self, kind: Execution, mode: Mode = Mode.FOOT):
+        """The error model of a counted leg `kind` in `mode`, or None if the
+        game does not count legs that way (or has no such mode)."""
+        model = self.model.mode(mode)
+        if model is None:
+            return None
+        return model.dpad if kind is Execution.DPAD else model.stick
+
+    def open_legs(self, belief: Belief, direction: Direction, kind: Execution = Execution.STICK_HOLD,
+                  mode: Mode = Mode.FOOT) -> Iterable[Tuple[PlannedLeg, float]]:
+        error = self.error(kind, mode)
         tables = [self._open_ends(state, direction) for state in belief]
         for tiles in range(1, self.costs.max_open_tiles + 1):
-            spread = self.costs.error.spread(tiles)
+            spread = error.spread(tiles)
             ends = [table[n] for table in tables for n in range(max(1, tiles - spread), tiles + spread + 1)]
             if any(end is None for end in ends):
                 return
-            yield self._leg(direction, LegEnd.OPEN, ends, tiles)
+            yield self._leg(direction, LegEnd.OPEN, ends, mode, kind, tiles, spread)
 
-    def open_leg(self, belief: Belief, direction: Direction, tiles: int,
-                 extra_spread: int = 0) -> Optional[Tuple[PlannedLeg, float]]:
-        """One open leg of `tiles` tiles, with `extra_spread` more tiles of
-        error than the error model gives, or None if it is refused."""
-        spread = self.costs.error.spread(tiles) + extra_spread
+    def open_leg(self, belief: Belief, direction: Direction, tiles: int, extra_spread: int = 0,
+                 kind: Execution = Execution.STICK_HOLD, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
+        """One open leg of `tiles` tiles walked as `kind`, with `extra_spread`
+        more tiles of error than the error model gives, or None if it is
+        refused."""
+        spread = self.error(kind, mode).spread(tiles) + extra_spread
         walks = [self.walk(state, direction, limit=n)
                  for state in belief for n in range(max(1, tiles - spread), tiles + spread + 1)]
         if any(w.outcome in (ESCAPED, HOPPED) for w in walks):
             return None
-        return self._leg(direction, LegEnd.OPEN, walks, tiles)
+        return self._leg(direction, LegEnd.OPEN, walks, mode, kind, tiles, spread)
+
+    def _errors(self):
+        """Every counted-leg error model the game has."""
+        return [error for model in (self.model.foot, self.model.bike) if model is not None
+                for error in (model.dpad, model.stick) if error is not None]
 
     def _open_ends(self, state: WorldState, direction: Direction) -> List[Optional[_Walk]]:
         """Where a hold of n tiles from `state` ends, for every n an open leg
         may need; None where it would hop a ledge or escape. Cached."""
         key = (state, direction)
         if key not in self._open_tables:
-            longest = self.costs.max_open_tiles + self.costs.error.spread(self.costs.max_open_tiles)
-            ends = [self.walk(state, direction, limit=n) for n in range(longest + 1)]
+            ends = [self.walk(state, direction, limit=n) for n in range(self._longest + 1)]
             self._open_tables[key] = [None if w.outcome in (ESCAPED, HOPPED) else w for w in ends]
         return self._open_tables[key]
 
-    def _leg(self, direction: Direction, end: LegEnd, walks: List[_Walk],
-             tiles: Optional[int] = None) -> Tuple[PlannedLeg, float]:
+    def _leg(self, direction: Direction, end: LegEnd, walks: List[_Walk], mode: Mode,
+             kind: Optional[Execution] = None, tiles: Optional[int] = None,
+             spread: int = 0) -> Tuple[PlannedLeg, float]:
+        """A leg and its cost. A counted leg pays `open_stop` when it is a
+        timed hold (an interruption leaves the player at a guess) or may end
+        off its tile; checked taps that land exactly do not."""
         longest = max(w.tiles for w in walks)
         path = self.costs.path
-        cost = self.costs.per_leg + path.tile * longest + path.grass * max(w.grass for w in walks)
-        if end is LegEnd.OPEN:
+        tile_cost = path.tile * self.model.mode(mode).tile_cost
+        cost = self.costs.per_leg + tile_cost * longest + path.grass * max(w.grass for w in walks)
+        if kind is Execution.STICK_HOLD or spread > 0:
             cost += self.costs.open_stop
         after = frozenset(w.end for w in walks)
-        return PlannedLeg(direction, end, longest if tiles is None else tiles, after), cost
+        execution = kind if kind is not None else _UNCOUNTED[end]
+        return PlannedLeg(direction, end, longest if tiles is None else tiles, after, execution, mode), cost
 
     def walk(self, state: WorldState, direction: Direction, limit: Optional[int] = None,
              stop_on_hop: bool = False) -> _Walk:
@@ -234,58 +306,80 @@ class BeliefPlanner:
 
     #   ---- search ----
 
-    def plan(self, start: Iterable[WorldState], goal: Goal) -> Optional[List[PlannedLeg]]:
+    def plan(self, start: Iterable[WorldState], goal: Goal, facing: Optional[Direction] = None,
+             bike: bool = False) -> Optional[List[PlannedLeg]]:
         """The cheapest legs that take every state in `start` to states that
-        all meet `goal`, or None.
+        all meet `goal`, or None. `facing` is the start facing (None: not
+        known); with `bike`, legs may be ridden (if the game has a bike).
 
-        A* over beliefs. The estimate for a belief is the most tiles any of
-        its states still has to walk to the goal, times the tile cost: every
-        leg costs at least that weight per tile each state walks, so the
-        estimate never overshoots."""
+        A* over (belief, facing, mode). The estimate for a belief is the most
+        tiles any of its states still has to walk to the goal, times the
+        cheapest tile cost: every leg costs at least that per tile each state
+        walks, so the estimate never overshoots."""
         is_goal = goal if callable(goal) else (lambda state: state.place == goal)
-        first: Belief = frozenset(start)
-        to_goal = self._tiles_to_goal(first, is_goal)
-        estimate = lambda belief: self.costs.path.tile * max(to_goal.get(s, float("inf")) for s in belief)
+        modes = [Mode.FOOT] + ([Mode.BIKE] if bike and self.model.bike is not None else [])
+        tile = self.costs.path.tile * min(self.model.mode(mode).tile_cost for mode in modes)
+        first = _Node(frozenset(start), facing, Mode.FOOT)
+        to_goal = self._tiles_to_goal(first.belief, is_goal)
+        estimate = lambda node: tile * max(to_goal.get(s, float("inf")) for s in node.belief)
         order = itertools.count()
-        best: Dict[Belief, float] = {first: 0.0}
-        came_from: Dict[Belief, Tuple[Belief, List[PlannedLeg]]] = {}
+        best: Dict[_Node, float] = {first: 0.0}
+        came_from: Dict[_Node, Tuple[_Node, List[PlannedLeg]]] = {}
         queue = [(estimate(first), next(order), first)]
         closed = set()
         while queue:
-            _, _, belief = heapq.heappop(queue)
-            if belief in closed:
+            _, _, node = heapq.heappop(queue)
+            if node in closed:
                 continue
-            closed.add(belief)
-            cost = best[belief]
-            if all(is_goal(state) for state in belief):
-                return _legs_to(belief, came_from)
-            for legs, legs_cost in self._steps_from(belief):
-                after = legs[-1].after
-                if after == belief:
+            closed.add(node)
+            cost = best[node]
+            if all(is_goal(state) for state in node.belief):
+                return _legs_to(node, came_from)
+            for legs, legs_cost in self._steps_from(node, modes, is_goal):
+                last = legs[-1]
+                if last.after == node.belief:
                     continue
+                after = _Node(last.after, None if last.end is LegEnd.DOOR else last.direction, last.mode)
                 if cost + legs_cost < best.get(after, float("inf")):
                     best[after] = cost + legs_cost
-                    came_from[after] = (belief, legs)
+                    came_from[after] = (node, legs)
                     heapq.heappush(queue, (cost + legs_cost + estimate(after), next(order), after))
         return None
 
-    def _steps_from(self, belief: Belief) -> Iterable[Tuple[List[PlannedLeg], float]]:
-        """Each leg from `belief` that keeps it within `max_spread`; a leg
-        that spreads it further is kept only if the `localizer` (see
+    def _steps_from(self, node: _Node, modes: List[Mode],
+                    is_goal: Callable[[WorldState], bool]) -> Iterable[Tuple[List[PlannedLeg], float]]:
+        """Each leg from `node` that keeps the belief within `max_spread`; a
+        leg that spreads it further is kept only if the `localizer` (see
         `routing.localize`) brings it back to one state, and then comes with
-        the localizing legs after it."""
-        for leg, leg_cost in self.legs_from(belief):
+        the localizing legs after it. A door leg is kept if it reaches the
+        goal or another loaded map."""
+        for leg, leg_cost in self.legs_from(node.belief, modes):
+            if leg.end is LegEnd.DOOR and not _door_leads_on(node.belief, leg, is_goal):
+                continue
+            leg_cost += self._start_cost(node, leg)
             if len(leg.after) <= self.costs.max_spread:
                 yield [leg], leg_cost
                 continue
             tail = self.localizer(leg.after) if self.localizer is not None else None
             if tail is not None:
-                yield [leg] + [t for t, _ in tail], leg_cost + sum(c for _, c in tail)
+                tail_legs = [t._replace(mode=leg.mode) for t, _ in tail]
+                yield [leg] + tail_legs, leg_cost + sum(c for _, c in tail)
+
+    def _start_cost(self, node: _Node, leg: PlannedLeg) -> float:
+        """What starting `leg` from `node` costs before it moves: a tap that
+        only turns, for a leg started with a tap toward a new direction; and
+        getting on or off the bike."""
+        cost = 0.0
+        if leg.execution in TAPPED and leg.direction is not node.facing:
+            cost += self.model.turn_tap
+        if leg.mode is not node.mode:
+            cost += self.model.mount
+        return cost
 
     def _tiles_to_goal(self, start: Belief, is_goal: Callable[[WorldState], bool]) -> Dict[WorldState, int]:
         """For every state reachable from `start` one press at a time, the
-        fewest tiles to a goal state (a hop counts 2). States that cannot
-        reach the goal are left out."""
+        fewest tiles to a goal state (a hop counts 2, a door 1). States that
+        cannot reach the goal are left out."""
         reverse: Dict[WorldState, List[Tuple[WorldState, int]]] = {}
         seen = set(start)
         frontier = list(start)
@@ -293,13 +387,14 @@ class BeliefPlanner:
             state = frontier.pop()
             for direction in CLOCKWISE:
                 result = world_step(self.world, state, direction, self.rules, self.objects)
-                if not isinstance(result, (Moved, Hop)):
+                after = _pressed_to(state, result)
+                if after is None:
                     continue
                 tiles = 2 if isinstance(result, Hop) else 1
-                reverse.setdefault(result.state, []).append((state, tiles))
-                if result.state not in seen:
-                    seen.add(result.state)
-                    frontier.append(result.state)
+                reverse.setdefault(after, []).append((state, tiles))
+                if after not in seen:
+                    seen.add(after)
+                    frontier.append(after)
         return _distances_from([state for state in seen if is_goal(state)], reverse)
 
 
@@ -320,15 +415,33 @@ def _distances_from(sources: List[WorldState], edges: Dict[WorldState, List[Tupl
 
 
 def plan_belief(world: World, start: Iterable[WorldState], goal: Goal, costs: BeliefCosts = BeliefCosts(),
-                rules: ElevationRules = FLAT, objects: AbstractSet[Place] = frozenset()) -> Optional[List[PlannedLeg]]:
-    """`BeliefPlanner(world, costs, rules, objects).plan(start, goal)`."""
-    return BeliefPlanner(world, costs, rules, objects).plan(start, goal)
+                rules: ElevationRules = FLAT, objects: AbstractSet[Place] = frozenset(),
+                facing: Optional[Direction] = None, bike: bool = False) -> Optional[List[PlannedLeg]]:
+    """`BeliefPlanner(world, costs, rules, objects).plan(start, goal, facing, bike)`."""
+    return BeliefPlanner(world, costs, rules, objects).plan(start, goal, facing, bike)
 
 
-def _legs_to(belief: Belief, came_from: Dict[Belief, Tuple[Belief, List[PlannedLeg]]]) -> List[PlannedLeg]:
+def _pressed_to(state: WorldState, result) -> Optional[WorldState]:
+    """Where one press from `state` leaves the player, or None if it does not
+    move them: a door into a map not loaded leaves them on the door tile."""
+    if isinstance(result, (Moved, Hop, Warped)):
+        return result.state
+    if isinstance(result, Warp):
+        return WorldState(Place(state.place.map, result.tile), state.elevation)
+    return None
+
+
+def _door_leads_on(before: Belief, leg: PlannedLeg, is_goal: Callable[[WorldState], bool]) -> bool:
+    """Whether a door leg reaches the goal or another loaded map, rather than
+    a door into a map not loaded that the route only passes."""
+    return all(is_goal(state) for state in leg.after) or (
+        {s.place.map for s in leg.after} != {s.place.map for s in before})
+
+
+def _legs_to(node: _Node, came_from: Dict[_Node, Tuple[_Node, List[PlannedLeg]]]) -> List[PlannedLeg]:
     steps = []
-    while belief in came_from:
-        belief, legs = came_from[belief]
+    while node in came_from:
+        node, legs = came_from[node]
         steps.append(legs)
     steps.reverse()
     return [leg for legs in steps for leg in legs]
