@@ -8,13 +8,21 @@ elevation. The screen is 15 x 10 tiles (VIEWPORT). Behavior numbers are from
 include/constants/metatile_behaviors.h.
 
 The command line that imports maps from a pokefirered checkout is
-`pokenav.cli.import_frlg`.
+`pokenav.cli.import_frlg`. Movement numbers (grid-locked steps, the bike's
+speed) are in games/frlg/physics.txt, read by `execution_model()`.
 """
+
+import os
 
 from pokenav.grid.maps.model import Behavior, Viewport
 from pokenav.grid.maps.pret import Checkout, PretGame
 from pokenav.grid.movement import ElevationRules
-from pokenav.physics.model import TileError
+from pokenav.physics import params
+from pokenav.physics.model import ExecutionModel, TileError, from_params
+
+#   games/frlg, from python/pokenav/games.
+GAME_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "games", "frlg")
+PHYSICS = os.path.join(GAME_DIR, "physics.txt")
 
 #   A transition tile: steps onto or off it ignore elevation.
 TRANSITION_ELEVATION = 0
@@ -79,3 +87,8 @@ BEHAVIORS.update(_same(Behavior.SIGN, 0x84, 0x87, 0x88, 0x91, 0x92))
 
 PRET = PretGame(primary_metatiles=PRIMARY_METATILES, behaviors=BEHAVIORS)
 
+
+
+def execution_model() -> ExecutionModel:
+    """FRLG's ways of walking, from games/frlg/physics.txt."""
+    return from_params(params.load(PHYSICS))
