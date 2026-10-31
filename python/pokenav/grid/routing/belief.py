@@ -16,7 +16,12 @@ chooses legs that keep it small:
   (k = 0), its stick holds are off by about 0.15 tile a tile, so holds up to
   11 tiles land exactly and a 14-tile hold may miss by one;
 - a **door** leg steps through the door ahead, into a loaded map or onto the
-  goal.
+  goal;
+- an **event** leg holds until a story scene starts (walking north from
+  Jubilife's gate until Rowan's scene): every state ends on the first of the
+  planner's `events` tiles it reaches. The scene leaves the player wherever
+  it leaves them, so an event leg ends the plan: the goal must be met on
+  those tiles.
 
 A plan starts from one known tile: the bot clips to a wall or corner before
 it plans, and from there the position is known after every exact leg. The
@@ -63,6 +68,7 @@ class LegEnd(enum.Enum):
     LEDGE = "ledge"    #   held until a ledge hop lands: the landing
     OPEN = "open"      #   a number of tiles: nothing proves it, unless each tap is checked
     DOOR = "door"      #   through the door ahead: the fade
+    EVENT = "event"    #   held until a story scene starts: the scene
 
 
 #   A stick hold's error as measured on BDSP (games/bdsp/MEASUREMENTS.md
@@ -140,7 +146,7 @@ class _Walk(NamedTuple):
 
 
 #   Why a walk stopped.
-HELD, LIMIT, HOPPED, ESCAPED = "held", "limit", "hopped", "escaped"
+HELD, LIMIT, HOPPED, ESCAPED, EVENT = "held", "limit", "hopped", "escaped", "event"
 
 #   What lies beside a tile of a held walk: a wall the drift presses against
 #   (a building's front with its door counts: the door opens only to a step
@@ -156,11 +162,14 @@ class BeliefPlanner:
     """Plans robust routes on one world with one set of rules and costs."""
 
     def __init__(self, world: World, costs: BeliefCosts = BeliefCosts(), rules: ElevationRules = FLAT,
-                 objects: AbstractSet[Place] = frozenset()):
+                 objects: AbstractSet[Place] = frozenset(), events: AbstractSet[Place] = frozenset()):
+        """`objects` are tiles a person or thing stands on; `events` are
+        tiles that start a story scene when stepped on."""
         self.world = world
         self.costs = costs
         self.rules = rules
         self.objects = objects
+        self.events = events
         self._trajectories: Dict[Tuple[WorldState, Direction], Tuple[List[_Walk], str]] = {}
         self._open_tables: Dict[Tuple[WorldState, Direction], List[Optional[_Walk]]] = {}
         self._flanks: Dict[Tuple[WorldState, Direction], List[Tuple[str, str]]] = {}
@@ -180,7 +189,8 @@ class BeliefPlanner:
             to_wall = [Execution.CLIP] + ([Execution.RUN] if self.model.mode(mode).run is not None else [])
             for direction in CLOCKWISE:
                 legs = [self.wall_leg(belief, direction, mode, kind) for kind in to_wall]
-                legs += [self.ledge_leg(belief, direction, mode), self.door_leg(belief, direction, mode)]
+                legs += [self.ledge_leg(belief, direction, mode), self.door_leg(belief, direction, mode),
+                         self.event_leg(belief, direction, mode)]
                 for leg in legs:
                     if leg is not None:
                         yield leg
@@ -207,6 +217,16 @@ class BeliefPlanner:
         if not self._held_safely(belief, direction, walks, mode):
             return None
         return self._leg(direction, LegEnd.LEDGE, walks, mode)
+
+    def event_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
+        """A hold until a story scene starts: each state ends on the first
+        event tile it reaches. None unless every state's walk reaches one."""
+        walks = [self.walk(state, direction) for state in belief]
+        if any(w.outcome != EVENT for w in walks):
+            return None
+        if not self._held_safely(belief, direction, walks, mode):
+            return None
+        return self._leg(direction, LegEnd.EVENT, walks, mode, Execution.EVENT)
 
     def door_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
         """A step through the door ahead of every state: each lands where the
@@ -251,7 +271,7 @@ class BeliefPlanner:
         spread = error.spread(tiles) + extra_spread
         walks = [self.walk(state, direction, limit=n)
                  for state in belief for n in range(max(1, tiles - spread), tiles + spread + 1)]
-        if any(w.outcome in (ESCAPED, HOPPED) for w in walks):
+        if any(w.outcome in (ESCAPED, HOPPED, EVENT) for w in walks):
             return None
         if error.lateral > 0 and not self.drifts_safely(belief, direction, tiles + spread):
             return None
@@ -260,8 +280,9 @@ class BeliefPlanner:
     #   ---- sideways drift ----
 
     def _held_safely(self, belief: Belief, direction: Direction, walks: List[_Walk], mode: Mode) -> bool:
-        """Whether a leg held with the stick (a clip or a ledge leg) from
-        `belief` is safe from drifting sideways, by the mode's stick error."""
+        """Whether a leg held with the stick (a clip, a run, a ledge or an
+        event leg) from `belief` is safe from drifting sideways, by the
+        mode's stick error."""
         if self.model.mode(mode).stick.lateral <= 0:
             return True
         return self.drifts_safely(belief, direction, max(w.tiles for w in walks))
@@ -315,7 +336,7 @@ class BeliefPlanner:
         key = (state, direction)
         if key not in self._open_tables:
             ends = [self.walk(state, direction, limit=n) for n in range(self._longest + 1)]
-            self._open_tables[key] = [None if w.outcome in (ESCAPED, HOPPED) else w for w in ends]
+            self._open_tables[key] = [None if w.outcome in (ESCAPED, HOPPED, EVENT) else w for w in ends]
         return self._open_tables[key]
 
     def _leg(self, direction: Direction, end: LegEnd, walks: List[_Walk], mode: Mode,
@@ -341,9 +362,12 @@ class BeliefPlanner:
         """Holds `direction` from `state` until stopped, until `limit` tiles,
         or (with `stop_on_hop`) until a ledge hop lands. A hop met by an open
         leg ends it as HOPPED: the hop takes a fixed time, so the leg's
-        length would not be the hold's."""
+        length would not be the hold's. A story scene ends any walk as
+        EVENT."""
         stops, outcome = self._trajectory(state, direction)
         for walked in stops[1:]:
+            if walked.outcome == EVENT:
+                return walked
             hopped = walked.outcome == HOPPED
             if hopped and (stop_on_hop or limit is not None):
                 return walked
@@ -354,8 +378,9 @@ class BeliefPlanner:
 
     def _trajectory(self, state: WorldState, direction: Direction) -> Tuple[List[_Walk], str]:
         """Every state a held walk passes from `state`, with the tiles and
-        grass so far (a step that hopped is marked HOPPED), and how the walk
-        ends: HELD or ESCAPED. Cached: beliefs share their states."""
+        grass so far (a step that hopped is marked HOPPED, the step onto an
+        event tile EVENT), and how the walk ends: HELD, ESCAPED or EVENT.
+        Cached: beliefs share their states."""
         key = (state, direction)
         if key not in self._trajectories:
             self._trajectories[key] = self._trace(state, direction)
@@ -375,6 +400,9 @@ class BeliefPlanner:
             last = stops[-1]
             grass = last.grass + (self.world.at(state.place).behavior is Behavior.TALL_GRASS)
             tiles = last.tiles + (2 if isinstance(result, Hop) else 1)
+            if state.place in self.events:
+                stops.append(_Walk(state, tiles, grass, EVENT))
+                return stops, EVENT
             stops.append(_Walk(state, tiles, grass, HOPPED if isinstance(result, Hop) else LIMIT))
 
     #   ---- search ----
@@ -429,9 +457,12 @@ class BeliefPlanner:
         leg that spreads it further is kept only if the `localizer` (see
         `routing.localize`) brings it back to one state, and then comes with
         the localizing legs after it. A door leg is kept if it reaches the
-        goal or another loaded map."""
+        goal or another loaded map; an event leg only if it reaches the
+        goal, as the scene ends the plan."""
         for leg, leg_cost in self.legs_from(node.belief, modes):
             if leg.end is LegEnd.DOOR and not _door_leads_on(node.belief, leg, is_goal):
+                continue
+            if leg.end is LegEnd.EVENT and not all(is_goal(state) for state in leg.after):
                 continue
             leg_cost += self._start_cost(node, leg)
             if len(leg.after) <= self.costs.max_spread:
@@ -493,9 +524,10 @@ def _distances_from(sources: List[WorldState], edges: Dict[WorldState, List[Tupl
 
 def plan_belief(world: World, start: WorldState, goal: Goal, costs: BeliefCosts = BeliefCosts(),
                 rules: ElevationRules = FLAT, objects: AbstractSet[Place] = frozenset(),
-                facing: Optional[Direction] = None, bike: bool = False) -> Optional[List[PlannedLeg]]:
-    """`BeliefPlanner(world, costs, rules, objects).plan(start, goal, facing, bike)`."""
-    return BeliefPlanner(world, costs, rules, objects).plan(start, goal, facing, bike)
+                facing: Optional[Direction] = None, bike: bool = False,
+                events: AbstractSet[Place] = frozenset()) -> Optional[List[PlannedLeg]]:
+    """`BeliefPlanner(world, costs, rules, objects, events).plan(start, goal, facing, bike)`."""
+    return BeliefPlanner(world, costs, rules, objects, events).plan(start, goal, facing, bike)
 
 
 def _fastest(model: ModeModel) -> float:

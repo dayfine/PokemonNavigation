@@ -26,6 +26,7 @@ class Execution(enum.Enum):
     DPAD = "dpad"          #   N D-pad taps, each checked to have moved a tile
     STICK_HOLD = "stick"   #   a stick hold timed for N tiles: spreads by the error model
     DOOR = "door"          #   a turn tap if needed, then a hold through the door ahead; the fade proves it
+    EVENT = "event"        #   the stick held until a story scene starts; the scene proves it
 
 
 #   Kinds whose length is counted, so the bot is told how many tiles.

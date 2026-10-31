@@ -67,6 +67,7 @@ it ended there:
 | `LEDGE` | the first ledge hop lands | each state's landing: a drop pins the row |
 | `OPEN` | about n tiles | each state n - k to n + k tiles on, k from the error model |
 | `DOOR` | the door ahead is entered | the warp's arrival, or the door if its map is not loaded |
+| `EVENT` | a story scene starts (the planner's `events` tiles) | the scene tiles reached; the leg ends the plan |
 
 An open leg is counted D-pad taps or a timed stick hold, each with its own
 error; how each leg is walked, and when the planner picks each, is in
@@ -120,7 +121,8 @@ the old planners did. `propose` turns shortest paths under several turn and
 grass weights into planned legs (split at each ledge landing), and
 `plan_ranked` proposes and ranks. `checks(starts, legs)` lists for each leg
 the states the player should be in and what proves it: "wall bump", "ledge
-landing", "map banner" (a new map), or "none".
+landing", "door fade", "scene start", "tap count", "map banner" (a new map),
+or "none".
 
 ### Route 1 again
 

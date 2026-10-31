@@ -14,6 +14,7 @@ game's `games/<game>/physics.txt` (`pokenav.physics`).
 | `dpad` | N D-pad taps, checking that each moved a tile | N tiles on, within the error model | BDSP and FRLG on foot: exact, so it does not spread |
 | `stick` | the stick for the time of N tiles | N tiles on, ± the error model; may drift a row sideways | spreads by the error model |
 | `door` | a turn tap if needed, then a hold into the door ahead | through the door; the fade proves it | the warp's arrival |
+| `event` | the stick, until a story scene starts | on the first scene tile reached; the scene proves it | the scene tiles reached; the leg ends the plan |
 
 A first tap toward a new direction only turns the player, so a `dpad` or
 `door` leg that starts facing another way costs `turn_tap` more. A plan is a
@@ -85,11 +86,31 @@ or run into a door, edge or person on the way, are refused. So:
   FRLG where it is exact. A 20-tile stick hold on BDSP may end a tile off and
   is refused before a door.
 - **`door`**: to end at a door, or to pass into another loaded map.
+- **`event`**: to end on a story scene, such as walking north from Jubilife's
+  gate until Rowan's scene starts. The scene's tiles are the planner's
+  `events` (places, like `objects`); no other leg may cross them, since the
+  scene would interrupt it. The scene opens as a cutscene without a dialog
+  box, so to the bot the walk reads as "stopped" and the game must then wait
+  for the scene's first line. The scene leaves the player wherever it leaves
+  them, so the leg is only taken into the goal and ends the plan.
 - **Bike** (only with `bike=True` and a game model that has one): for long
   clips, where the bike's speed pays for getting on. Exact offsets stay on
   foot with `dpad`, since BDSP bike taps are not assumed to be whole tiles.
   With BDSP's bike guessed no faster than running, a run wins; the two speeds
   are to be measured together.
+
+## Checking a leg's end
+
+Each leg says what proves it ended where planned (`routing.score.checks`):
+a wall bump for `clip` and `run`, the landing for `ledge`, the tap count for
+`dpad`, the fade for `door`, the scene for `event`, and nothing for `stick`.
+The bot reads a wall bump as the screen no longer changing while the stick
+is held, which fails where the camera does not scroll: in parts of BDSP's
+Route 203 the camera stays still, so real walking read as "blocked, 0 tiles"
+and caused needless re-plans. There a `clip` or `run` cannot be checked by
+screen change alone; the walker needs another sign (the player's walking
+animation, or the time a hold of that many tiles takes), or the planner a
+map note saying where the camera is fixed. Not modelled yet.
 
 ## Bike measurements (BDSP, planned)
 

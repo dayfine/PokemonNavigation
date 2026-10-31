@@ -1,8 +1,8 @@
 """Tests for pokenav.grid.routing.belief: plans start from one known tile,
 walls and ledges collapse beliefs, open legs spread them by the measured error
 model and are allowed only into a goal wide enough or within `max_spread`,
-doors and edges are avoided, and robust plans on BDSP's story maps and (with
-POKEFIRERED_DIR) FRLG's Route 1."""
+doors and edges are avoided, a leg can end on a story scene, and robust plans
+on BDSP's story maps and (with POKEFIRERED_DIR) FRLG's Route 1."""
 
 import os
 import unittest
@@ -15,6 +15,8 @@ from pokenav.grid.movement import WorldState
 from pokenav.grid.routing.belief import (
     MAX_SPREAD, MEASURED_STICK, BeliefCosts, BeliefPlanner, LegEnd, describe, plan_belief,
 )
+from pokenav.grid.routing.execution import bot_legs
+from pokenav.grid.routing.score import checks
 from pokenav.physics.model import TileError
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
@@ -171,6 +173,46 @@ class OpenLegIntoGoalTest(unittest.TestCase):
         self.assertEqual(len(legs[-1].after), 3, text(legs))
         self.assertEqual(coarse.max_spread, MAX_SPREAD)
         self.assertIsNone(plan_belief(STREET, self.START, between(14, 17, 2), coarse._replace(max_spread=2)))
+
+
+class EventTest(unittest.TestCase):
+    """A leg can end on a story scene: walking north until Rowan's scene
+    starts. The scene's tiles are the planner's `events`; the scene leaves
+    the player wherever it does, so the leg ends the plan."""
+
+    #   The scene starts on row 2 of the room, across its width.
+    SCENE = frozenset(Place("Room", Tile(x, 2)) for x in range(1, 6))
+    START = at(3, 4)
+
+    def setUp(self):
+        self.planner = BeliefPlanner(ROOM, events=self.SCENE)
+        self.in_scene = lambda s: s.place in self.SCENE
+
+    def test_walk_north_until_the_scene(self):
+        legs = self.planner.plan(self.START, self.in_scene)
+        self.assertEqual([describe(leg) for leg in legs], ["event north (2 tiles) -> Room (3, 2)"])
+        self.assertIs(legs[0].end, LegEnd.EVENT)
+        self.assertEqual(bot_legs(legs), [("event", "N")])
+        self.assertEqual([c.proof for c in checks([self.START], legs)], ["scene start"])
+
+    def test_a_scene_in_the_way_ends_other_legs(self):
+        belief = frozenset({self.START})
+        #   North to the wall would cross the scene: not a wall leg; and a hold
+        #   long enough to reach it is not an open leg.
+        self.assertIsNone(self.planner.wall_leg(belief, N))
+        self.assertEqual([leg.tiles for leg, _ in self.planner.open_legs(belief, N)], [1])
+        #   Past the scene is out of reach: the scene would start first.
+        self.assertIsNone(self.planner.plan(self.START, Place("Room", Tile(3, 1))))
+
+    def test_an_event_leg_is_taken_only_into_the_goal(self):
+        #   The scene's west tile: north from the start would start the scene
+        #   two tiles east of it, so the plan clips west first.
+        legs = self.planner.plan(self.START, Place("Room", Tile(1, 2)))
+        self.assertEqual([leg.end for leg in legs], [LegEnd.WALL, LegEnd.EVENT], text(legs))
+        self.assertEqual(legs[-1].after, {at(1, 2)})
+        #   With no scene, the wall leg north reaches the far row.
+        legs = plan_belief(ROOM, self.START, Place("Room", Tile(3, 1)))
+        self.assertEqual(legs[-1].after, {at(3, 1)}, text(legs))
 
 
 class StoryTest(unittest.TestCase):

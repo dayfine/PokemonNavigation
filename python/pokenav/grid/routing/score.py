@@ -82,8 +82,8 @@ class Ranked(NamedTuple):
 
 class Check(NamedTuple):
     """What the walker checks after a leg: the states it may be in, and what
-    proves it ("wall bump", "ledge landing", "door fade", "tap count", "map
-    banner", or "none")."""
+    proves it ("wall bump", "ledge landing", "door fade", "scene start", "tap
+    count", "map banner", or "none")."""
 
     leg: int
     expected: Belief
@@ -114,6 +114,8 @@ def _walk_leg(planner: BeliefPlanner, belief: Belief, leg: PlannedLeg, extra: in
         found = planner.ledge_leg(belief, leg.direction, leg.mode)
     elif leg.end is LegEnd.DOOR:
         found = planner.door_leg(belief, leg.direction, leg.mode)
+    elif leg.end is LegEnd.EVENT:
+        found = planner.event_leg(belief, leg.direction, leg.mode)
     else:
         found = planner.open_leg(belief, leg.direction, leg.tiles, extra, leg.execution, leg.mode)
     return None if found is None else found[0]
@@ -241,7 +243,7 @@ def _margin(planner: BeliefPlanner, start: Belief, legs: Sequence[PlannedLeg], i
 def _localizations(start: Belief, legs: Sequence[PlannedLeg], options: ScoreOptions) -> int:
     count = 0
     for before, leg in zip(_beliefs(start, legs), legs):
-        proves = leg.end is LegEnd.WALL or (leg.end is LegEnd.LEDGE and options.ledges_localize)
+        proves = leg.end in (LegEnd.WALL, LegEnd.EVENT) or (leg.end is LegEnd.LEDGE and options.ledges_localize)
         if proves and len(leg.after) < len(before):
             count += 1
     return count
@@ -289,6 +291,8 @@ def _proof(before: Belief, leg: PlannedLeg) -> str:
         return "ledge landing"
     if leg.end is LegEnd.DOOR:
         return "door fade"
+    if leg.end is LegEnd.EVENT:
+        return "scene start"
     if leg.execution is Execution.DPAD:
         return "tap count"
     if maps_after != maps_before:
