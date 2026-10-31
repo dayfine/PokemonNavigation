@@ -27,7 +27,7 @@ from typing import Collection, Dict, List, NamedTuple, Optional, Sequence
 
 from pokenav.geometry import Tile
 from pokenav.maps import schema
-from pokenav.maps.model import Behavior, Cell, MapGrid
+from pokenav.maps.model import Behavior, Cell, GridMap2D
 from pokenav.maps.schema import MapImage
 from pokenav.maps.textgrid import STANDARD, Legend, show
 from pokenav.png import Color, Image
@@ -75,7 +75,7 @@ DEFAULT_TILE_PX = 16
 
 #   ---- text ----
 
-def ascii(grid: MapGrid, overlay: Overlay, legend: Legend = STANDARD) -> str:
+def ascii(grid: GridMap2D, overlay: Overlay, legend: Legend = STANDARD) -> str:
     """The grid as text with the overlay drawn on it: region tiles `o`, path
     tiles `*`, the start `@` and the end `X`."""
     return show(grid, legend, _marks(overlay))
@@ -109,7 +109,7 @@ def draw(image: Image, calibration: MapImage, overlay: Overlay) -> Image:
     return image
 
 
-def plain_image(grid: MapGrid, tile_px: int = DEFAULT_TILE_PX) -> Image:
+def plain_image(grid: GridMap2D, tile_px: int = DEFAULT_TILE_PX) -> Image:
     """A picture of the grid in flat colors, for maps with no image."""
     image = Image(grid.width * tile_px, grid.height * tile_px)
     calibration = MapImage("", 0, 0, tile_px)
