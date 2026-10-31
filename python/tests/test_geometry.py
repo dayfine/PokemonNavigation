@@ -1,10 +1,10 @@
-"""Tests for pokenav.geometry: directions, tiles and steps."""
+"""Tests for pokenav.grid.geometry: directions, tiles and steps."""
 
 import doctest
 import unittest
 
-from pokenav import geometry
-from pokenav.geometry import CLOCKWISE, Direction, Tile
+from pokenav.grid import geometry
+from pokenav.grid.geometry import CLOCKWISE, Direction, Tile
 
 
 def load_tests(loader, tests, ignore):
