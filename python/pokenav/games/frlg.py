@@ -7,8 +7,8 @@ every level, and 15 is a multi-level tile (bridges) that keeps the player's
 elevation. The screen is 15 x 10 tiles (VIEWPORT).
 """
 
-from pokenav.maps.model import Viewport
-from pokenav.movement import ElevationRules
+from pokenav.grid.maps.model import Viewport
+from pokenav.grid.movement import ElevationRules
 
 #   A transition tile: steps onto or off it ignore elevation.
 TRANSITION_ELEVATION = 0

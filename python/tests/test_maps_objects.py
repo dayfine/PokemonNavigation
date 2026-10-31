@@ -1,17 +1,17 @@
-"""Tests for pokenav.maps.objects (sight, signs, blocking, anchors) and the
+"""Tests for pokenav.grid.maps.objects (sight, signs, blocking, anchors) and the
 world's screen coverage."""
 
 import unittest
 
 from pokenav.games import frlg
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.objects import (
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.objects import (
     Blocking, blocking_tiles, can_read, is_corner, reading_tile, sight_tiles,
     walls_around, watched_tiles,
 )
-from pokenav.maps.schema import Connection, MapFile, Npc, Sign, Wander
-from pokenav.maps.textgrid import parse
-from pokenav.maps.world import Place, World
+from pokenav.grid.maps.schema import Connection, MapFile, Npc, Sign, Wander
+from pokenav.grid.maps.textgrid import parse
+from pokenav.grid.maps.world import Place, World
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
