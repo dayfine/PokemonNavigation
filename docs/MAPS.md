@@ -46,6 +46,7 @@ named records for what is on the map:
 | `warps` | `tile`, `to_map`, `to_warp` (index into that map's warps) |
 | `connections` | `direction`, `map`, `offset` (the other map's x or y is this map's minus `offset`) |
 | `notes` | `text` and `source`: where each fact came from |
+| `image` | `source` (the picture's file or page), `origin` (pixel of tile (0, 0)'s corner), `tile_px` |
 
 Tiles are `[x, y]`. Example: [examples/tiny_town.json](examples/tiny_town.json).
 
@@ -156,3 +157,25 @@ stops a held walk.
 player stopped, tiles, held or not) and where the maps join; the tests check
 the maps against every entry. Add a measurement there when a walk on the
 console disagrees with the map, then fix the map file.
+
+## Drawing routes (`maps.render`)
+
+Routes, legs and belief sets are drawn on the map's own picture (the
+Bulbapedia map), lined up by the map file's `image` entry; ASCII is for
+tests and terminals. Images are not committed: download the one named in the
+map file's `image.source`.
+
+```sh
+# text
+PYTHONPATH=python python3 -m pokenav.maps.render games/bdsp/maps/route_202.json \
+    --path 19,22 30,22 30,19 --region 29,19 30,19
+# over the picture
+PYTHONPATH=python python3 -m pokenav.maps.render games/bdsp/maps/route_202.json \
+    --path 19,22 30,22 30,19 --image Sinnoh_Route_202_DP.png --out route.png
+```
+
+`--path` takes waypoints; each consecutive pair is one straight leg. Legs are
+drawn as bars in alternating colors, the start as an outlined square, the
+end as a filled one, and each `--region` as tinted tiles. Without `--image`,
+`--out` draws the cells in flat colors. `pokenav.png` reads and writes the
+PNGs with the standard library only.

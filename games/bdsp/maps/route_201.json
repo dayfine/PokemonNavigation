@@ -52,5 +52,10 @@
     {"text": "Exits: west edge rows 9..12 to Lake Verity; south gap (14..17, 19) to Twinleaf Town; east edge rows 3..6 to Sandgem Town. The Lake Verity and Twinleaf offsets are not known.", "source": "Bulbapedia DP map"},
     {"text": "No trainers. The other NPCs wander and are left off, so every wall a plan uses stays put.", "source": "console (lab B)"},
     {"text": "The Potion giver is at (44, 3) on the DP map but stands at (43, 3) on the console, in the top grass row.", "source": "console (lab B)"}
-  ]
+  ],
+  "image": {
+    "source": "https://archives.bulbagarden.net/wiki/File:Sinnoh_Route_201_DP.png",
+    "origin": [8, 0],
+    "tile_px": 16
+  }
 }

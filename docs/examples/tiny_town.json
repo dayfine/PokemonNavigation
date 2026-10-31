@@ -18,5 +18,6 @@
   "buildings": [{"name": "Mart", "kind": "mart", "door": [1, 0]}],
   "warps": [{"tile": [1, 0], "to_map": "Tiny Mart", "to_warp": 0}],
   "connections": [{"direction": "south", "map": "Route 9", "offset": -4}],
-  "notes": [{"text": "door row measured by walking north", "source": "console"}]
+  "notes": [{"text": "door row measured by walking north", "source": "console"}],
+  "image": {"source": "tiny_town.png", "origin": [8, 0], "tile_px": 16}
 }

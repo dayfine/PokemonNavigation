@@ -8,7 +8,7 @@ import unittest
 from pokenav.geometry import Direction, Tile
 from pokenav.maps import schema
 from pokenav.maps.model import OPEN, WALL, Behavior, Cell, MapGrid
-from pokenav.maps.schema import MapFile, Npc, Wander
+from pokenav.maps.schema import MapFile, MapImage, Npc, Wander
 
 from tests.paths import DOCS_EXAMPLES
 
@@ -45,6 +45,7 @@ class LoadTest(unittest.TestCase):
         self.assertEqual((town.warps[0].to_map, town.warps[0].to_warp), ("Tiny Mart", 0))
         self.assertEqual(town.connections[0].offset, -4)
         self.assertEqual(town.notes[0].source, "console")
+        self.assertEqual(town.image, MapImage("tiny_town.png", 8, 0, 16))
 
     def test_only_the_cells_are_required(self):
         town = schema.from_json(minimal(["#.", ".#"]))

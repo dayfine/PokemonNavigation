@@ -55,5 +55,10 @@
     {"text": "Walking south from Route 202 (30, 22) stops at (29, 2) above the Poke Mart; walking west from there stops at (20, 2). The lab's sign stands on row 7, in front of the fence: walking west along row 7 stops at it.", "source": "console (lab B)"},
     {"text": "Joins: the 16 px strip at the right of the Route 201 image matches the left of this image, putting column 0 on Route 201's column 64; rows are 3 px apart, so the row comes from the edges: the lab fence (row 6) lines up with the fence post at the right of Route 201's row 3, and Route 201's open rows 4..6 meet rows 7..9 here (offset 3).", "source": "Bulbapedia DP map"},
     {"text": "Route 202's image bottom matches this image's top 16 px to the right, so Route 202's column x + 1 is above column x here (offset -1); its open bottom row (25..30, 25) meets (24..29, 0). The 8 px overlap leaves a half-row doubt.", "source": "Bulbapedia DP map"}
-  ]
+  ],
+  "image": {
+    "source": "https://archives.bulbagarden.net/wiki/File:Sandgem_Town_DP.png",
+    "origin": [8, 0],
+    "tile_px": 16
+  }
 }

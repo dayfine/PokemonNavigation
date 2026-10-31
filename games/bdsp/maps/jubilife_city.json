@@ -78,5 +78,10 @@
     {"text": "Tiles were classified by colour and only those on the story route were checked by eye, so some open plaza next to a lamp or a pattern line may read as blocked.", "source": "Bulbapedia DP map"},
     {"text": "The DP layout matches BDSP (2026-10-28): the Trainers' School and the Pokemon Center either side of the main road, the Poke Mart and the fountain park north of them, the TV station at the top of the main road and the Poketch Company in the north-west.", "source": "console (lab B)"},
     {"text": "NPCs are the story's people, placed from the console; they stand still.", "source": "console (lab B)"}
-  ]
+  ],
+  "image": {
+    "source": "https://archives.bulbagarden.net/wiki/File:Jubilife_City_DP.png",
+    "origin": [0, 0],
+    "tile_px": 16
+  }
 }
