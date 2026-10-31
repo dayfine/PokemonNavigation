@@ -100,8 +100,8 @@ class BeliefTest(unittest.TestCase):
 
     def test_max_spread(self):
         start = [at(x, y) for x in range(1, 6) for y in range(1, 5)]
-        self.assertIsNone(plan_belief(ROOM, start, Place("Room", Tile(5, 4)), BeliefCosts(max_spread=3))
-                          and None)
+        #   No single leg brings 20 tiles down to 3: a corner takes two.
+        self.assertIsNone(plan_belief(ROOM, start, Place("Room", Tile(5, 4)), BeliefCosts(max_spread=3)))
         legs = plan_belief(ROOM, start, Place("Room", Tile(5, 4)), BeliefCosts(max_spread=5))
         self.assertTrue(all(len(leg.after) <= 5 for leg in legs), text(legs))
 
