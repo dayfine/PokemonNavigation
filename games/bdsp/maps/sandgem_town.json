@@ -2,6 +2,7 @@
   "format": "pokenav-map/1",
   "name": "Sandgem Town",
   "game": "bdsp",
+  "encounters": ["water"],
   "legend": {
     "#": {"blocked": true},
     ".": {},
