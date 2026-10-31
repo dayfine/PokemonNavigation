@@ -78,13 +78,14 @@ Log lines read: `Starting Program: X`, `Program State: STOPPED`,
 start|done|failed`, `Command File Runner: running X`, `issue_left_joystick()`,
 `issue_right_joystick()`, `issue_buttons()`, `issue_dpad()`,
 `issue_mash_button()`, `issue_nop()` (timing only), `[Walk] ...`,
-`[Route] Turning X.`, other `[Route]`/`[Talk]`/`[Sign]` lines (kept as notes),
-and screenshot lines (`[Checkpoint] Screenshot:`, `Failure screenshot:`,
-`Save prompt screenshot:`).
+and `[Route] Turning X.`, other `[Route]`/`[Talk]`/`[Sign]` lines (kept as
+notes). Screenshot lines are not read: the files stay on the lab Mac.
 
 ## Record
 
-A field that is unknown or does not apply is left out.
+A field that is unknown or does not apply is left out. The program's name
+(`PokemonBDSP:AutoStory`, ...) is read to cut segments but not written:
+`source` and the file name say it.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -94,7 +95,6 @@ A field that is unknown or does not apply is left out.
 | `t` | str | Start, local wall clock of the lab Mac, ISO to the ms (`2026-10-30T20:49:14.755`). No time zone. |
 | `t_end` | str | End: the input's start plus hold plus release; a walk's last slice end, or the time its result was logged if later. |
 | `source` | str | `program` or `cfr`. |
-| `program` | str | Program name, e.g. `PokemonBDSP:AutoStory`, `NintendoSwitch:CommandFileRunner`. |
 | `run_start` | str | When the program run (or CFR batch) started; groups records of one run. |
 | `batch`, `line`, `command` | str, int, str | CFR: batch (file) name, line number in it, and the command text. |
 | `time_source` | str | CFR: `log` or `mtime` (see Sources). |
@@ -113,8 +113,6 @@ A field that is unknown or does not apply is left out.
 | `wild_battles` | int | Wild battles run from during the walk. |
 | `battle_inputs` | int | Inputs sent during a walk to run from battles (not recorded on their own). |
 | `notes` | [str] | Up to 8 log lines after the record and before the next input (`[Route]`, `[Talk]`, `[Sign]`, `[Walk] ... stopped on blocked.`), or what a CFR command printed. |
-| `screenshot` | str | The next screenshot of the same run or batch after this record; relative to the lab profile folder (`Screenshots/...`, `CommandFiles/outbox/...`) when under it. |
-| `screenshot_after_ms` | int | From `t_end` to the screenshot. |
 | `probe_first_move_ms`, `probe_last_move_ms` | int | `probe_walk()` results. |
 
 ### `input`
@@ -160,7 +158,7 @@ These are not in the log, so a record cannot say them; later measurements
 FRLG) can add fields for them:
 
 - **The true position**: tile, sub-tile offset, and map, before and after.
-  `label`, `event` and the screenshot are hints, not positions.
+  `label` and `event` are hints, not positions.
 - **Facing before the input**, so whether a hold turned, stepped, or both.
 - **Whether a timed hold moved at all**, and how far: `turn`, `tap`, `hold`
   and `walk_for` records have no screen reading. Only walks measure movement,

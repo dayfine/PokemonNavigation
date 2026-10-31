@@ -8,7 +8,7 @@ import os
 from typing import Any, Dict, Iterable, List, Optional
 
 from .cfr_parser import list_out_files, parse_out_file
-from .common import format_time
+from .common import PARSE_ONLY_FIELDS, format_time
 from .log_parser import parse_log
 from .segment import segment
 
@@ -63,23 +63,9 @@ def extract(log_path: Optional[str], cfr_dir: Optional[str] = None,
     result = [r for r in kept if since_s is None or r["t"] >= since_s]
     result += [r for r in cfr_records if cfr_since_s is None or r["t"] >= cfr_since_s]
     result.sort(key=lambda r: (r["t"], r.get("line") or 0))
-    profile = profile_dir(log_path, cfr_dir)
     for rec in result:
         rec["id"] = record_id(rec)
-        shot = rec.get("screenshot")
-        if shot and profile and shot.startswith(profile + os.sep):
-            rec["screenshot"] = shot[len(profile) + 1:]
     return result
-
-
-def profile_dir(log_path: Optional[str], cfr_dir: Optional[str]) -> Optional[str]:
-    """The lab profile folder (holds SerialPrograms.log, Screenshots/ and
-    CommandFiles/). Screenshot paths under it are kept relative to it."""
-    if log_path:
-        return os.path.dirname(os.path.abspath(log_path))
-    if cfr_dir:
-        return os.path.dirname(os.path.dirname(os.path.abspath(cfr_dir)))
-    return None
 
 
 def write_jsonl(records: Iterable[Dict[str, Any]], path: Optional[str], append: bool = False) -> int:
@@ -98,7 +84,7 @@ def write_jsonl(records: Iterable[Dict[str, Any]], path: Optional[str], append: 
         for rec in records:
             if rec.get("id") in existing:
                 continue
-            compact = {k: v for k, v in rec.items() if v is not None}
+            compact = {k: v for k, v in rec.items() if v is not None and k not in PARSE_ONLY_FIELDS}
             f.write(json.dumps(compact, separators=(",", ":"), ensure_ascii=False) + "\n")
             count += 1
     finally:

@@ -151,13 +151,11 @@ class LogParserTests(unittest.TestCase):
         self.assertEqual(hold["input"]["hold_ms"], 200)
         self.assertEqual(hold["input"]["dir"], "N")
 
-    def test_press_notes_and_screenshot(self):
+    def test_press_notes_and_no_screenshot(self):
         press = self.records[7]
         self.assertEqual(press["input"]["buttons"], "A")
         self.assertEqual(press["notes"], ["[Talk] Clown by the Poketch Company: no dialogue opened."])
-        for rec in self.records:
-            self.assertTrue(rec["screenshot"].endswith("x-step.png"))
-        self.assertEqual(press["screenshot_after_ms"], 2120)
+        self.assertFalse(any("screenshot" in rec for rec in self.records))
 
     def test_unterminated_walk(self):
         text = "\n".join(PROGRAM_LOG.splitlines()[:11]) + \
@@ -184,10 +182,9 @@ class CfrTests(unittest.TestCase):
         self.assertEqual(walk["input"]["dir"], "E")
         self.assertEqual(walk["t"], "2026-10-30T23:06:50.155")
 
-    def test_screenshots(self):
-        self.assertTrue(self.records[0]["screenshot"].endswith("m169-w1_lamp.png"))
-        self.assertEqual(self.records[0]["screenshot_after_ms"], 2660 - 801)
-        self.assertTrue(self.records[2]["screenshot"].endswith("m169-w1_error.png"))
+    def test_shot_lines_are_skipped(self):
+        self.assertFalse(any("screenshot" in rec for rec in self.records))
+        self.assertFalse(any("shot" in note for rec in self.records for note in rec["notes"] or []))
 
     def test_tap_run_skips_the_turn(self):
         roles = [r["role"] for r in self.records[2:6]]
@@ -222,7 +219,6 @@ class ExtractTests(unittest.TestCase):
             lost = [r for r in cfr if r["batch"] == "lost-batch"]
             self.assertEqual(len(lost), 1)
             self.assertEqual(lost[0]["input"]["buttons"], "B")
-            self.assertEqual(cfr[0]["screenshot"], "CommandFiles/outbox/m169-w1_lamp.png")
             self.assertEqual(records, sorted(records, key=lambda r: r["t"]))
 
             later = extract(log, outbox, since=dt.datetime(2026, 10, 30, 23, 0))
@@ -233,6 +229,9 @@ class ExtractTests(unittest.TestCase):
             self.assertEqual(write_jsonl(records, path, append=True), len(records) - 5)
             back = read_jsonl(path)
             self.assertEqual(len(back), len(records))
+            #  The program name is used to cut segments, not written.
+            self.assertTrue(all("program" in r for r in records))
+            self.assertFalse(any("program" in r for r in back))
             self.assertNotIn(None, [v for r in back for v in r.values()])
             json.dumps(back)
 

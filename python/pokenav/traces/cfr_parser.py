@@ -2,8 +2,8 @@
 
 A result file lists each command with its offsets from the start of the
 batch (`ok 3 stick L -1 0 200 600 @4794-5595ms`), preceded by what the command
-printed (`walk still after 4400ms, moving 4000ms; changes 3 52 ...`,
-`shot <path>`). The batch's start time comes from the lab log's
+printed (`walk still after 4400ms, moving 4000ms; changes 3 52 ...`;
+`shot <path>` lines, screenshots on the lab Mac, are skipped). The batch's start time comes from the lab log's
 `Command File Runner: running <name>` line when there is one, else from the
 file's modification time.
 """
@@ -54,10 +54,8 @@ def _strip_comment(command: str) -> str:
 def parse_out_text(text: str, name: str, start: _dt.datetime, time_source: str) -> List[Dict[str, Any]]:
     """Records for one batch whose first command started at `start`."""
     records: List[Dict[str, Any]] = []
-    awaiting_shot: List[Dict[str, Any]] = []
     printed: List[str] = []
     last_controller: Optional[Dict[str, Any]] = None
-    last_t1 = 0
 
     def at(ms: int) -> _dt.datetime:
         return start + _dt.timedelta(milliseconds=ms)
@@ -71,17 +69,7 @@ def parse_out_text(text: str, name: str, start: _dt.datetime, time_source: str) 
         rec["line"] = line_no
         rec["command"] = command
         rec["time_source"] = time_source
-        rec["_t1"] = t1
         return rec
-
-    def attach_shots(shots: List[str], t1: int):
-        nonlocal awaiting_shot
-        for path in shots:
-            for rec in awaiting_shot:
-                if rec["screenshot"] is None:
-                    rec["screenshot"] = path
-                    rec["screenshot_after_ms"] = max(0, t1 - rec["_t1"])
-            awaiting_shot = []
 
     for raw in text.splitlines():
         line = raw.rstrip()
@@ -94,11 +82,9 @@ def parse_out_text(text: str, name: str, start: _dt.datetime, time_source: str) 
             continue
         if ok:
             line_no, command, t0, t1 = int(ok.group(1)), ok.group(2), int(ok.group(3)), int(ok.group(4))
-            last_t1 = t1
         else:
             line_no, command, t0, t1 = int(err.group(1)), err.group(2), None, None
         out, printed = printed, []
-        shots = [m.group(1) for m in map(_SHOT.match, out) if m]
         others = [o for o in out if not _SHOT.match(o)]
         words = _strip_comment(command).split()
         if not words:
@@ -156,15 +142,9 @@ def parse_out_text(text: str, name: str, start: _dt.datetime, time_source: str) 
             if others:
                 rec["notes"] = [o[:200] for o in others[:8]]
             records.append(rec)
-            awaiting_shot.append(rec)
             last_controller = rec
-        attach_shots(shots, t1)
 
-    #  What printed after the last line (an error's screenshot).
-    attach_shots([m.group(1) for m in map(_SHOT.match, printed) if m], last_t1)
     _mark_tap_runs(records)
-    for rec in records:
-        rec.pop("_t1", None)
     return records
 
 

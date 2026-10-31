@@ -62,6 +62,11 @@ DPAD_DIRECTIONS = {
 
 WALK_STOPS = ("arrived", "dialog", "transition", "blocked", "limit")
 
+#  Fields the parsers set to cut a trace into segments but that the written
+#  records leave out: `source` and the file name already say which program
+#  ran.
+PARSE_ONLY_FIELDS = ("program",)
+
 
 def new_record(kind: str, t: _dt.datetime, source: str) -> Dict[str, Any]:
     """A record with the fields every record has. Unknown values are None."""
@@ -91,8 +96,6 @@ def new_record(kind: str, t: _dt.datetime, source: str) -> Dict[str, Any]:
         "still_threshold": None,
         "wild_battles": None,
         "notes": None,
-        "screenshot": None,
-        "screenshot_after_ms": None,
     }
 
 

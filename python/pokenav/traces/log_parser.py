@@ -52,16 +52,10 @@ _OBJECTIVE = re.compile(r"^\[AutoStory\] Objective: (.*)$")
 _CHECKPOINT = re.compile(r"^\[Checkpoint\] (\S+): start")
 _EVENT = re.compile(r"^\[Event\] (\S+ \S+): (start|done|failed.*)$")
 _CFR_RUNNING = re.compile(r"^Command File Runner: running (.+)$")
-_SCREENSHOT = re.compile(
-    r"^(?:\[Checkpoint\] Screenshot|Failure screenshot|Save prompt screenshot): (.+\.(?:png|jpg))$")
 
 _NOTE_TAGS = ("[Route]", "[Talk]", "[Sign]", "[Walk]")
 _MAX_NOTES = 8
 _MAX_NOTE_CHARS = 200
-
-
-def _ms_between(a: _dt.datetime, b: _dt.datetime) -> int:
-    return int(round((b - a).total_seconds() * 1000))
 
 
 class LogParser:
@@ -94,7 +88,6 @@ class LogParser:
         self.taps_run: Optional[Dict[str, Any]] = None
         self.walk: Optional[Dict[str, Any]] = None
         self.last_input: Optional[Dict[str, Any]] = None
-        self.awaiting_shot: List[Dict[str, Any]] = []
         self.notes_target: Optional[Dict[str, Any]] = None
         self.run_counter = getattr(self, "run_counter", 0)
 
@@ -112,7 +105,6 @@ class LogParser:
 
     def _emit(self, rec: Dict[str, Any]):
         self.records.append(rec)
-        self.awaiting_shot.append(rec)
 
     def _note(self, text: str):
         target = self.notes_target
@@ -136,7 +128,7 @@ class LogParser:
         text = m.group(3)
         #  Cheap filter: almost every line is a watcher statistic.
         if not (text.startswith("issue_") or text.startswith("[") or "Program" in text
-                or "screenshot" in text or text.startswith("Command File Runner")):
+                or text.startswith("Command File Runner")):
             return
         t = parse_log_time(m.group(1))
 
@@ -165,11 +157,6 @@ class LogParser:
             return
         if text.startswith("Command File Runner: inbox is empty"):
             self.batch = None
-            return
-
-        sm = _SCREENSHOT.match(text)
-        if sm:
-            self._on_screenshot(t, sm.group(1))
             return
 
         om = _OBJECTIVE.match(text)
@@ -288,8 +275,6 @@ class LogParser:
             return None
         if self.records and self.records[-1] is rec:
             self.records.pop()
-            if rec in self.awaiting_shot:
-                self.awaiting_shot.remove(rec)
             self.last_input = None
             return rec
         return None
@@ -398,16 +383,6 @@ class LogParser:
                 self.walk["notes"] = (self.walk["notes"] or []) + [text[:_MAX_NOTE_CHARS]]
             return
         self._note(text)
-
-    # -- screenshots --------------------------------------------------------
-
-    def _on_screenshot(self, t: _dt.datetime, path: str):
-        for rec in self.awaiting_shot:
-            if rec.get("screenshot") is None:
-                rec["screenshot"] = path
-                end = _dt.datetime.strptime(rec["t_end"] or rec["t"], "%Y-%m-%dT%H:%M:%S.%f")
-                rec["screenshot_after_ms"] = max(0, _ms_between(end, t))
-        self.awaiting_shot = []
 
     # -- end ----------------------------------------------------------------
 
