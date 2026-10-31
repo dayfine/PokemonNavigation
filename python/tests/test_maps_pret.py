@@ -170,7 +170,8 @@ class PokefireredTest(unittest.TestCase):
     def test_route1_size_and_ledges(self):
         route1 = self.world.grid("Route1")
         self.assertEqual((route1.width, route1.height), (24, 40))
-        ledge_rows = sorted({t.y for t in route1.find(Behavior.LEDGE_SOUTH)})
+        ledges = [t for t in route1.tiles() if route1.at(t).behavior is Behavior.LEDGE_SOUTH]
+        ledge_rows = sorted({t.y for t in ledges})
         self.assertEqual(ledge_rows, [5, 10, 15, 20, 26, 31])
 
     def test_viridian_joins_route1_twelve_tiles_over(self):
