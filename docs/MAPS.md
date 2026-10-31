@@ -130,10 +130,10 @@ reads a local checkout. `maps.pret.Checkout(root, game)` reads
 tile), the tilesets' `metatile_attributes.bin` (behavior) and each map's
 `map.json` (connections, warps, objects, signs). The game-specific numbers
 (primary tileset size, behavior table, elevation rules, viewport) are in
-`pokenav/games/frlg.py`.
+`pokenav/games/frlg.py`; the command line is `pokenav.cli.import_frlg`.
 
 ```sh
-PYTHONPATH=python python3 -m pokenav.games.frlg ~/pokefirered Route1 PalletTown --out /tmp/frlg
+PYTHONPATH=python python3 -m pokenav.cli.import_frlg ~/pokefirered Route1 PalletTown --out /tmp/frlg
 # wrote /tmp/frlg/Route1.json (24 x 40)
 # wrote /tmp/frlg/PalletTown.json (24 x 20)
 PYTHONPATH=python python3 -m pokenav.cli.textgrid show /tmp/frlg/Route1.json
