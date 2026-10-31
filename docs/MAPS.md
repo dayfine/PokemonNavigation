@@ -165,14 +165,14 @@ console disagrees with the map, then fix the map file.
 Routes, legs and belief sets are drawn on the map's own picture (the
 Bulbapedia map), lined up by the map file's `image` entry; ASCII is for
 tests and terminals. Images are not committed: download the one named in the
-map file's `image.source`.
+map file's `image.source`. The command line is `pokenav.cli.render`:
 
 ```sh
 # text
-PYTHONPATH=python python3 -m pokenav.maps.render games/bdsp/maps/route_202.json \
+PYTHONPATH=python python3 -m pokenav.cli.render games/bdsp/maps/route_202.json \
     --path 19,22 30,22 30,19 --region 29,19 30,19
 # over the picture
-PYTHONPATH=python python3 -m pokenav.maps.render games/bdsp/maps/route_202.json \
+PYTHONPATH=python python3 -m pokenav.cli.render games/bdsp/maps/route_202.json \
     --path 19,22 30,22 30,19 --image Sinnoh_Route_202_DP.png --out route.png
 ```
 

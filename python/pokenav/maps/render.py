@@ -8,25 +8,12 @@ centers in alternating colors, the start is an outlined square and the end a
 filled one. The picture is lined up with the grid by the map file's `image`
 (origin and tile size); with no picture, cells are drawn as flat colors.
 
-Command line (from the repository root):
-
-    PYTHONPATH=python python3 -m pokenav.maps.render games/bdsp/maps/route_202.json \\
-        --path 19,22 30,22 30,19 --region 29,19 30,19
-    ...
-    ###,,,,,,......,,,,,,..o*X.....#####   // row 19: the region, the path, the end
-    ...
-
-    PYTHONPATH=python python3 -m pokenav.maps.render games/bdsp/maps/route_202.json \\
-        --path 19,22 30,22 30,19 --image ~/maps/Route_202_DP.png --out /tmp/route.png
-    wrote /tmp/route.png (592 x 416)
+The command line is `pokenav.cli.render`.
 """
 
-import argparse
-import sys
-from typing import Collection, Dict, List, NamedTuple, Optional, Sequence
+from typing import Collection, Dict, List, NamedTuple, Sequence
 
 from pokenav.geometry import Tile
-from pokenav.maps import schema
 from pokenav.maps.model import Behavior, Cell, GridMap2D
 from pokenav.maps.schema import MapImage
 from pokenav.maps.textgrid import STANDARD, Legend, show
@@ -169,38 +156,3 @@ def legs_through(waypoints: Sequence[Tile]) -> List[List[Tile]]:
         legs.append([a.step(direction, i) for i in range(a.manhattan(b) + 1)])
     return legs
 
-
-def _tile(text: str) -> Tile:
-    x, y = text.split(",")
-    return Tile(int(x), int(y))
-
-
-def main(argv: Optional[List[str]] = None) -> int:
-    parser = argparse.ArgumentParser(prog="python3 -m pokenav.maps.render",
-                                     description="Draw a route and regions over a map.")
-    parser.add_argument("map", help="a map file (.json)")
-    parser.add_argument("--path", nargs="*", default=[], help="waypoints x,y; each pair is a straight leg")
-    parser.add_argument("--region", nargs="*", action="append", default=[], help="tiles x,y of one region")
-    parser.add_argument("--image", help="the map's picture (PNG); lined up by the map file's image entry")
-    parser.add_argument("--out", help="write a PNG here instead of printing text")
-    args = parser.parse_args(argv)
-
-    map_file = schema.load(args.map)
-    overlay = Overlay(legs_through([_tile(t) for t in args.path]),
-                      [{_tile(t) for t in region} for region in args.region])
-    if not args.out:
-        sys.stdout.write(ascii(map_file.grid, overlay))
-        return 0
-    if args.image:
-        image = Image.read(args.image)
-        calibration = map_file.image or MapImage(args.image)
-    else:
-        image = plain_image(map_file.grid)
-        calibration = MapImage("", 0, 0, DEFAULT_TILE_PX)
-    draw(image, calibration, overlay).write(args.out)
-    print("wrote %s (%d x %d)" % (args.out, image.width, image.height))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
