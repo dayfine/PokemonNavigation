@@ -18,7 +18,7 @@ N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 #   Row 2 is a ledge with a gap at x = 4; a sign at (1, 4); an NPC at (3, 4).
 SMALL = parse("""\
 #..?..#
-#..\"\".#
+#..,,.#
 #vvv..#
 #.....#
 #S.N..#

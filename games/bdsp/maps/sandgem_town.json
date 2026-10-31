@@ -1,0 +1,61 @@
+{
+  "format": "pokenav-map/1",
+  "name": "Sandgem Town",
+  "game": "bdsp",
+  "encounters": ["water"],
+  "legend": {
+    "#": {"blocked": true},
+    ".": {},
+    "D": {"blocked": true, "behavior": "door"},
+    "S": {"blocked": true, "behavior": "sign"}
+  },
+  "rows": [
+    "####################..........####",
+    "####################..........####",
+    "####################..........####",
+    "####################......########",
+    "####################......########",
+    "####################......########",
+    "########D###..###D##S....S#D######",
+    ".....S........................####",
+    "..............................####",
+    "..............................####",
+    "######.........#####..........####",
+    "######.........#####..........####",
+    "##########.....#####..........####",
+    "##########.....#####..........####",
+    "##########.....#####..........####",
+    "#######D##....S#D###..S.......####",
+    "######........................####",
+    "######........................####",
+    "######....................########",
+    "####################......########",
+    "####################......########",
+    "####################......########",
+    "####################......########"
+  ],
+  "points": [
+    {"name": "ABOVE_MART", "tile": [29, 2], "proof": "walking south from Route 202 (30, 22) stops here"},
+    {"name": "ABOVE_POKEMON_CENTER", "tile": [20, 2], "proof": "walking west from ABOVE_MART stops here"},
+    {"name": "POKEMON_CENTER_SIGN", "tile": [20, 6], "proof": "walking south from (20, 2) stops at (20, 5), above it"}
+  ],
+  "buildings": [
+    {"name": "Professor Rowan's Lab", "kind": "lab", "door": [8, 6], "note": "door between the two front windows, pixel (144, 110)"},
+    {"name": "Pokemon Center", "kind": "pokecenter", "door": [17, 6], "note": "glass door, pixel (288, 104)"},
+    {"name": "Poke Mart", "kind": "mart", "door": [27, 6], "note": "pixel (448, 104)"}
+  ],
+  "connections": [
+    {"direction": "west", "map": "Route 201", "offset": 3},
+    {"direction": "north", "map": "Route 202", "offset": -1},
+    {"direction": "south", "map": "Route 219", "offset": 0}
+  ],
+  "notes": [
+    {"text": "Read from the DP map of Sandgem Town (560 x 368 px); the tile grid starts 8 px in from the left edge, as on the route maps.", "source": "Bulbapedia DP map"},
+    {"text": "Buildings are blocked; each door is the tile walked into, on the building's front row. A fence runs west from the lab along row 6 to the map edge.", "source": "Bulbapedia DP map"},
+    {"text": "Exits: west rows 7..9 (Route 201); north (20..29, 0) (Route 202); south (20..25, 22) (the beach, Route 219, offset not known).", "source": "Bulbapedia DP map"},
+    {"text": "Walking south from Route 202 (30, 22) stops at (29, 2) above the Poke Mart; walking west from there stops at (20, 2). The lab's sign stands on row 7, in front of the fence: walking west along row 7 stops at it.", "source": "console (lab B)"},
+    {"text": "Joins: the 16 px strip at the right of the Route 201 image matches the left of this image, putting column 0 on Route 201's column 64; rows are 3 px apart, so the row comes from the edges: the lab fence (row 6) lines up with the fence post at the right of Route 201's row 3, and Route 201's open rows 4..6 meet rows 7..9 here (offset 3).", "source": "Bulbapedia DP map"},
+    {"text": "Route 202's image bottom matches this image's top 16 px to the right, so Route 202's column x + 1 is above column x here (offset -1); its open bottom row (25..30, 25) meets (24..29, 0). The 8 px overlap leaves a half-row doubt.", "source": "Bulbapedia DP map"},
+    {"text": "A youngster and two breeders wander south of the Poke Mart; they still need wander rectangles, measured on the console.", "source": "console (lab B)"}
+  ]
+}

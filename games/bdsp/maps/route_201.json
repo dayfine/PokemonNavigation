@@ -1,0 +1,57 @@
+{
+  "format": "pokenav-map/1",
+  "name": "Route 201",
+  "game": "bdsp",
+  "encounters": ["grass"],
+  "legend": {
+    "#": {"blocked": true},
+    ".": {},
+    ",": {"behavior": "tall_grass"},
+    "v": {"blocked": true, "behavior": "ledge_south"},
+    "S": {"blocked": true, "behavior": "sign"}
+  },
+  "rows": [
+    "################################################################",
+    "################################################################",
+    "################################################################",
+    "##########################################,.,,,,,,,,,...........",
+    "##########################################,,,,,,,,,,,..S........",
+    "##########################################,,,,,,,,,##...........",
+    "##..####..####....######..##....##..####..,,,,,,,,,##...........",
+    "##..####..####....######..##....##..####..,,,,,,,,,##vvvv.######",
+    "##........####............................,,,,,,,,,##.....######",
+    "....####..................................,,,,,,,,,##.....######",
+    "vvvv####vvvvvvvvvvvvvvvvvvvvvvvv........S.,,,,,,,,,##.....######",
+    "....####............,,,,,,,,,,............................######",
+    "....................,,,,,,,,,,............................######",
+    "########.....S......##########............................######",
+    "##############....############################............######",
+    "##############....############################,,,,,,,,,,,,######",
+    "##############....##############################################",
+    "##############....##############################################",
+    "##############....##############################################",
+    "##############....##############################################"
+  ],
+  "points": [
+    {"name": "POTION_GIVER_TALK_FROM", "tile": [44, 3], "proof": "walking west along row 3 stops here, facing her"},
+    {"name": "POTION_GIVER_ROW_EAST", "tile": [53, 3], "note": "east end of her row, on the path"},
+    {"name": "POTION_GIVER_ROW_WEST_END", "tile": [42, 3]},
+    {"name": "POTION_GIVER_ROW_EAST_END", "tile": [52, 3]}
+  ],
+  "npcs": [
+    {"name": "potion_giver", "tile": [43, 3], "note": "Only turns. Talked to from (44, 3), facing west."}
+  ],
+  "connections": [
+    {"direction": "east", "map": "Sandgem Town", "offset": -3},
+    {"direction": "west", "map": "Lake Verity", "offset": 0},
+    {"direction": "south", "map": "Twinleaf Town", "offset": 0}
+  ],
+  "notes": [
+    {"text": "Read from the DP map of Route 201 (1040 x 320 px). The tile grid starts 8 px in from the left edge: tile (x, y) covers pixels [8 + 16x, 24 + 16x) x [16y, 16y + 16). Trees sit about 3 px lower on their tiles than on the Route 202 map; tall grass and the Potion giver fit a grid with no vertical offset.", "source": "Bulbapedia DP map"},
+    {"text": "Trees: tiles under trunks or mostly under a canopy are blocked.", "source": "Bulbapedia DP map"},
+    {"text": "Ledges: row 10 west of the tall grass (unchecked), and (53..56, 7) in the north-east, which is one row higher than it looks on the DP map, as on Route 202.", "source": "console (lab B)"},
+    {"text": "Exits: west edge rows 9..12 to Lake Verity; south gap (14..17, 19) to Twinleaf Town; east edge rows 3..6 to Sandgem Town. The Lake Verity and Twinleaf offsets are not known.", "source": "Bulbapedia DP map"},
+    {"text": "No trainers. The other NPCs wander; the girl in the tall grass still needs a wander rectangle, measured on the console.", "source": "console (lab B)"},
+    {"text": "The Potion giver is at (44, 3) on the DP map but stands at (43, 3) on the console, in the top grass row.", "source": "console (lab B)"}
+  ]
+}

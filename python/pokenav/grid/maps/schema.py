@@ -236,8 +236,33 @@ def dump(path: str, map_file: MapFile, legend: Legend) -> None:
 
 
 def dumps(map_file: MapFile, legend: Legend) -> str:
-    """The map file's text, encoding cells with `legend`."""
-    return json.dumps(to_json(map_file, legend), indent=2, ensure_ascii=False) + "\n"
+    """The map file's text, encoding cells with `legend`: one line per legend
+    entry, row and record, so the rows read as a picture and a diff shows
+    which record changed."""
+    return format_json(to_json(map_file, legend))
+
+
+def format_json(data: Dict[str, Any]) -> str:
+    """JSON text for a parsed map file with each top-level list item or
+    object entry on its own line."""
+    lines = []
+    for key, value in data.items():
+        lines.append("  %s: %s" % (_compact(key), _block(value)))
+    return "{\n" + ",\n".join(lines) + "\n}\n"
+
+
+def _block(value: Any) -> str:
+    if isinstance(value, list) and value:
+        items = ",\n".join("    " + _compact(item) for item in value)
+        return "[\n" + items + "\n  ]"
+    if isinstance(value, dict) and value:
+        items = ",\n".join("    %s: %s" % (_compact(k), _compact(v)) for k, v in value.items())
+        return "{\n" + items + "\n  }"
+    return _compact(value)
+
+
+def _compact(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(", ", ": "))
 
 
 def from_json(data: Dict[str, Any]) -> MapFile:

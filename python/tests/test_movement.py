@@ -32,7 +32,7 @@ def at(x, y, elevation=0):
 #   unknown ground, (2, 1) and (3, 1) tall grass.
 SMALL = grid_of("""\
 #..?..#
-#..\"\".#
+#..,,.#
 #vvv..#
 #.....#
 #S...D#

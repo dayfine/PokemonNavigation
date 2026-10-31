@@ -65,7 +65,7 @@ The legend is one two-way table between characters and cell kinds
 | Char | Cell | Char | Cell |
 |---|---|---|---|
 | `#` | wall | `.` | open ground |
-| `"` | tall grass | `v ^ < >` | ledge, crossed south / north / west / east |
+| `,` | tall grass | `v ^ < >` | ledge, crossed south / north / west / east |
 | `D` | door (walk into) | `W` | warp (step onto) |
 | `S` | sign | `~` | water |
 | `=` | counter | `i` | ice |
@@ -117,6 +117,14 @@ Questions about the map file's NPCs, signs and points on a grid:
   player on a tile. A corner (walls at right angles) is an anchor: two walks
   end on it from anywhere nearby.
 
+Wanderers are moving walls. Only walls, signs, doors and NPCs that stand
+still pin a row or column: a stop next to a wanderer's patch means "somewhere
+near it" until a later leg confirms where the player is (`held_at` never
+counts an NPC as a wall). A plan treats every tile of the patch as taken
+(`Blocking.ALL`), the runtime walker's `avoid` tiles; where a route must cross
+a patch, it uses a timed hold and then a wall stop, not a walk until still,
+since a wanderer's steps keep the screen moving.
+
 `World.off_map_fraction(place, viewport)` is the black share of the screen
 around a place, counting connected maps as shown. A small room never fills
 the screen, so screen checks (battle detection, "stopped moving") must not
@@ -144,3 +152,18 @@ imported with the flag in their note; signs readable from any side are stored
 as read facing north; door mats (arrow warps) fire on the step onto them,
 while the game fires them on a press of their direction while standing on
 them.
+
+## BDSP maps (`games/bdsp/`, `games.bdsp`)
+
+The story's first maps, read from Bulbapedia's DP maps and checked on the
+console, are map files in `games/bdsp/maps/`: Route 201, Sandgem Town,
+Route 202 and Jubilife City. Each file's notes say how its grid was read and
+what was measured. `games.bdsp.story_world()` joins Route 201, Sandgem Town
+and Route 202; Jubilife City stays on its own until its stairs are mapped.
+Standing NPCs are walls in these worlds: on the console a standing trainer
+stops a held walk.
+
+`games/bdsp/wall_hits.json` lists measured walks (start, direction, where the
+player stopped, tiles, held or not) and where the maps join; the tests check
+the maps against every entry. Add a measurement there when a walk on the
+console disagrees with the map, then fix the map file.
