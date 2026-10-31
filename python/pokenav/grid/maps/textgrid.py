@@ -32,9 +32,9 @@ The command line for showing and converting grids is `pokenav.cli.textgrid`.
 import re
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import OPEN, Behavior, Cell, GridMap2D
-from pokenav.maps.schema import MapFile, NamedPoint, Npc
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.model import OPEN, Behavior, Cell, GridMap2D
+from pokenav.grid.maps.schema import MapFile, NamedPoint, Npc
 
 
 class Legend:
