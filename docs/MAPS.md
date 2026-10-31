@@ -117,6 +117,14 @@ Questions about the map file's NPCs, signs and points on a grid:
   player on a tile. A corner (walls at right angles) is an anchor: two walks
   end on it from anywhere nearby.
 
+Wanderers are moving walls. Only walls, signs, doors and NPCs that stand
+still pin a row or column: a stop next to a wanderer's patch means "somewhere
+near it" until a later leg confirms where the player is (`held_at` never
+counts an NPC as a wall). A plan treats every tile of the patch as taken
+(`Blocking.ALL`), the runtime walker's `avoid` tiles; where a route must cross
+a patch, it uses a timed hold and then a wall stop, not a walk until still,
+since a wanderer's steps keep the screen moving.
+
 `World.off_map_fraction(place, viewport)` is the black share of the screen
 around a place, counting connected maps as shown. A small room never fills
 the screen, so screen checks (battle detection, "stopped moving") must not

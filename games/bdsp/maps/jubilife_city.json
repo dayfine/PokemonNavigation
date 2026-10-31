@@ -63,11 +63,12 @@
   ],
   "npcs": [
     {"name": "clown_tv_station", "tile": [34, 11], "note": "west of the TV station door"},
-    {"name": "clown_poketch_company", "tile": [13, 13], "note": "east of the Poketch Company's sign; talked to from the south; a walk west along row 13 from the east stops beside him"},
+    {"name": "clown_poketch_company", "tile": [13, 13], "wander": {"low": [12, 13], "high": [14, 14]}, "note": "east of the Poketch Company's sign; wanders a tile or two around it, so he is talked to by sweeping the rows below the sign and pressing A; rectangle rough, to be measured"},
     {"name": "clown_mart", "tile": [54, 23], "note": "below the Poke Mart's planters, where the road meets the plaza"},
     {"name": "poketch_president", "tile": [44, 26], "note": "on the main road north of the school and the Center; talked to from the east facing west (also from the south)"},
     {"name": "npc_51_34", "tile": [51, 34]},
-    {"name": "npc_53_34", "tile": [53, 34]}
+    {"name": "npc_53_34", "tile": [53, 34]},
+    {"name": "green_haired_man", "tile": [44, 16], "wander": {"low": [43, 15], "high": [46, 17]}, "note": "wanders the crossing of the long road and the main road; a held walk east along the long road stops on him about as often as on the building north of the Mart, and while he is in the way his steps keep the screen moving, so a walk until still does not stop (r167a); rectangle rough, to be measured"}
   ],
   "buildings": [
     {"name": "Trainers' School", "kind": "school", "door": [39, 30]},
@@ -78,6 +79,6 @@
     {"text": "Read from the DP map of Jubilife City (1024 x 772 px): 16 px tiles from the top-left corner; the last 4 px rows are left out. Road and paved plaza are walkable; buildings, roofs, trees, planters, lamps, signs, fences and fountains are blocked.", "source": "Bulbapedia DP map"},
     {"text": "Tiles were classified by colour and only those on the story route were checked by eye, so some open plaza next to a lamp or a pattern line may read as blocked.", "source": "Bulbapedia DP map"},
     {"text": "The DP layout matches BDSP (2026-10-28): the Trainers' School and the Pokemon Center either side of the main road, the Poke Mart and the fountain park north of them, the TV station at the top of the main road and the Poketch Company in the north-west.", "source": "console (lab B)"},
-    {"text": "NPCs are the story's people, placed from the console; they stand still.", "source": "console (lab B)"}
+    {"text": "NPCs are the story's people, placed from the console. Those with a wander rectangle move inside it; the others stand still.", "source": "console (lab B)"}
   ]
 }
