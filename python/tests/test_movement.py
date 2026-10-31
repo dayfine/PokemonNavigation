@@ -6,7 +6,7 @@ import unittest
 from pokenav import movement
 from pokenav.games import frlg
 from pokenav.geometry import Direction, Tile
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.movement import (
     FLAT, Blocked, BlockReason, Edge, Hop, Moved, PlayerState, Warp, held_at, step, walk,
 )
@@ -21,7 +21,7 @@ def load_tests(loader, tests, ignore):
 
 
 def grid_of(text):
-    return read(text).grid
+    return parse(text).grid
 
 
 def at(x, y, elevation=0):
