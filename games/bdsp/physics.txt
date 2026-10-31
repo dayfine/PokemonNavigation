@@ -1,0 +1,26 @@
+# BDSP physics: how each way of walking moves and may miss.
+# Format: docs/LEG_KINDS.md and python/pokenav/physics/params.py.
+# Costs are in walking tiles. "results 2026-10-31" is the results table of
+# games/bdsp/MEASUREMENTS.md (console B, Oreburgh City by day); (#n) is its row.
+#
+# name                value  status    source
+
+# On foot.
+foot.tile_cost        1      defined   the unit: walking's time per tile
+foot.dpad.per_tile    0      measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#1: a tap moves 40 to 42 px, one tile; #2: 22 taps landed on the same tile 3/3)
+foot.dpad.overshoot   0      measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#2: taps snap to whole tiles)
+foot.stick.per_tile   0.15   measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#1: a 160 ms hold moves 36 to 48 px, about ±0.15 tile; #3: about half a tile over 18 holds)
+foot.stick.overshoot  0      measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#1: each hold's stop is in its per-tile error)
+
+# Turning and doors.
+turn_tap              1      measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#5: a tap toward a new direction only turns; it takes a tap's time, about a tile's)
+door                  8      guessed   games/bdsp/MEASUREMENTS.md results 2026-10-31 (#6: black for 1 to 1.5 s, 2 s after the step); to measure: ms per walking tile, to turn the fade into tiles
+
+# On the bike (from Eterna City; nothing measured yet). Planned measurements:
+# docs/LEG_KINDS.md, "Bike measurements".
+bike.tile_cost        0.5    guessed   to measure: hold time from wall to wall on a long straight, on foot and on the bike
+bike.dpad.per_tile    0.3    guessed   to measure: 10 taps from a wall, 3 times, a shot after each; taps are not assumed to be whole tiles
+bike.dpad.overshoot   0.5    guessed   to measure: the same taps' stops
+bike.stick.per_tile   0.3    guessed   to measure: holds of 0.5, 1 and 2 s from a wall, 5 times each, a shot once still
+bike.stick.overshoot  1      guessed   to measure: shots every 100 ms after letting go mid-run, until still (the slide after release)
+mount                 3      guessed   to measure: time from the bike button to riding, and back

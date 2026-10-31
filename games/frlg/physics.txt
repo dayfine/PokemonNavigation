@@ -1,0 +1,20 @@
+# FireRed / LeafGreen physics. Movement is grid-locked: every step is a whole
+# tile, so counted legs (D-pad taps or a held direction) are exact.
+# Format: docs/LEG_KINDS.md and python/pokenav/physics/params.py.
+# pret: the pokefirered decompilation.
+#
+# name                value  status    source
+
+foot.tile_cost        1      defined   the unit: walking's time per tile (16 frames, MOVE_SPEED_NORMAL)
+foot.dpad.per_tile    0      pret      grid-locked steps (src/event_object_movement.c, InitMovementNormal)
+foot.dpad.overshoot   0      pret      grid-locked steps: a step always finishes its tile
+foot.stick.per_tile   0      pret      the stick reads as the D-pad; grid-locked steps
+foot.stick.overshoot  0      pret      grid-locked steps: a step always finishes its tile
+turn_tap              0.5    pret      src/field_player_avatar.c PlayerTurnInPlace: walk in place fast, 8 frames
+door                  4      guessed   to measure: frames from the step into a door to control on the other side
+bike.tile_cost        0.375  pret      src/bike.c rides with PlayerRideWaterCurrent: MOVE_SPEED_FAST_2, 6 frames a tile (src/event_object_movement.c sSpeedFast2StepFuncs)
+bike.dpad.per_tile    0      pret      grid-locked steps on the bike too
+bike.dpad.overshoot   0      pret      grid-locked steps on the bike too
+bike.stick.per_tile   0      pret      grid-locked steps on the bike too
+bike.stick.overshoot  0      pret      grid-locked steps on the bike too
+mount                 2      guessed   to measure: frames from the registered Bicycle to riding, and back

@@ -12,6 +12,10 @@ trainer_a), so the worlds here turn standing NPCs into walls.
     # Place(map='Sandgem Town', tile=Tile(x=29, y=0))
 
 Measured walks to check the maps against are in games/bdsp/wall_hits.json.
+How each way of walking moves and may miss (D-pad taps exact, stick holds
+not) is in games/bdsp/physics.txt:
+
+    plan = plan_belief(world, starts, goal, belief_costs(), bike=False)
 """
 
 import os
@@ -21,11 +25,19 @@ from pokenav.grid.maps import schema
 from pokenav.grid.maps.objects import with_static_npcs_as_walls
 from pokenav.grid.maps.schema import MapFile
 from pokenav.grid.maps.world import World
+from pokenav.grid.routing.belief import BeliefCosts
+from pokenav.physics import params
+from pokenav.physics.model import ExecutionModel, from_params
 
 #   games/bdsp, from python/pokenav/games.
 GAME_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "games", "bdsp")
 MAPS_DIR = os.path.join(GAME_DIR, "maps")
 WALL_HITS = os.path.join(GAME_DIR, "wall_hits.json")
+PHYSICS = os.path.join(GAME_DIR, "physics.txt")
+
+#   The longest counted leg the planner tries: a town's street. Leaving the
+#   Oreburgh Center for the gym took 22 D-pad taps (MEASUREMENTS.md #2).
+MAX_COUNTED_TILES = 30
 
 #   Map file names by map name.
 MAP_FILES = {
@@ -56,3 +68,14 @@ def story_world() -> World:
 def jubilife_world() -> World:
     """Jubilife City on its own: its stairs to Route 202 are not mapped yet."""
     return world_of(["Jubilife City"])
+
+
+def execution_model() -> ExecutionModel:
+    """BDSP's ways of walking, from games/bdsp/physics.txt."""
+    return from_params(params.load(PHYSICS))
+
+
+def belief_costs() -> BeliefCosts:
+    """Robust-planner costs for BDSP: its execution model, and counted legs
+    as long as a street."""
+    return BeliefCosts(execution=execution_model(), max_open_tiles=MAX_COUNTED_TILES)
