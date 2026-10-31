@@ -22,8 +22,8 @@ world (maps joined by connections) decides what is there.
 
 ### Screen coverage
 
-A `Viewport` is the window of tiles the game draws around the player. A map
-smaller than the viewport (a 6 x 6 house on a 15 x 10 screen) always shows
-black around it, which screen checks such as battle detection must allow for:
-`MapGrid.off_map_fraction(tile, viewport)` gives the black share of the
-screen while standing on `tile`.
+A `Viewport` is the window of tiles the game draws around the player:
+`viewport.window(tile)` lists the tiles on screen while standing on `tile`.
+A map smaller than the viewport (a 6 x 6 house on a 15 x 10 screen) always
+shows black around it, which screen checks such as battle detection must
+allow for.
