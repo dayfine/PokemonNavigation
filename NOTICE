@@ -15,7 +15,9 @@ Copyright (c) 2021 Alexander J. Yee, where dayfine wrote them with Claude:
   (branch bdsp/grid-sim), made game-agnostic.
 - cpp/tests/LegPlanner_tests.cpp, TileGrid_tests.cpp: from
   Pokemon_LegPlanner_Tests.cpp and PokemonBDSP_AutoStory_Tests.cpp.
+- python/pokenav/maps/ and python/tests/test_maps.py: from devtools/maps/.
 - games/bdsp/maps/route202.txt: from
-  PokemonBDSP/Programs/AutoStory/Data/PokemonBDSP_AutoStory_Route202.cpp.
-- games/bdsp/maps/sim_poketch_company.txt and games/bdsp/physics.txt: from
-  PokemonBDSP_AutoStory_Sim.{h,cpp}.
+  PokemonBDSP/Programs/AutoStory/Data/PokemonBDSP_AutoStory_Route202.cpp;
+  games/bdsp/maps/sim_poketch_company.txt and games/bdsp/physics.txt: from
+  PokemonBDSP_AutoStory_Sim.{h,cpp}; games/bdsp/maps/examples/: from
+  devtools/maps/examples/.

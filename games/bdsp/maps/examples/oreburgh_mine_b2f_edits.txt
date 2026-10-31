@@ -1,0 +1,13 @@
+// Oreburgh Mine B2F (Oreburgh_Mine_B2F_DP.png stretched to 512 tall; offset 0,4).
+// The coal block's edges are drawn over the room's second row from the top and
+// Roark's row at the bottom; both were walked on the console.
+open 17 2 29
+open 29 6 27
+// People and rocks on the bottom rows touch the coal block in the image, so
+// the object finder misses them: Roark between his two rocks, and the worker
+// and Machop at the bottom left.
+block 29 17 19
+block 29 8 8
+block 29 11 11
+// The last image row is the bottom wall.
+block 31 0 31
