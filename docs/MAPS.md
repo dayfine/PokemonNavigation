@@ -1,6 +1,6 @@
 # Map data
 
-How a map is held in `pokenav.maps`. Code: `python/pokenav/maps/`.
+How a map is held in `pokenav.grid.maps`. Code: `python/pokenav/grid/maps/`.
 
 ## Cells (`maps.model`)
 
@@ -52,7 +52,7 @@ named records for what is on the map:
 Tiles are `[x, y]`. Example: [examples/tiny_town.json](examples/tiny_town.json).
 
 ```python
-from pokenav.maps import schema
+from pokenav.grid.maps import schema
 town = schema.load("docs/examples/tiny_town.json")
 town.point("DOORSTEP").tile        # Tile(x=1, y=1)
 schema.dump("out.json", town, {"#": WALL, ".": OPEN, "D": DOOR})

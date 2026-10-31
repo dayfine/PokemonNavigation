@@ -1,13 +1,13 @@
-"""Tests for pokenav.maps.render: the text form (snapshots) and drawing on
+"""Tests for pokenav.grid.maps.render: the text form (snapshots) and drawing on
 a picture lined up with the grid."""
 
 import unittest
 
-from pokenav.geometry import Tile
-from pokenav.maps import render
-from pokenav.maps.render import Overlay
-from pokenav.maps.schema import MapImage
-from pokenav.maps.textgrid import parse
+from pokenav.grid.geometry import Tile
+from pokenav.grid.maps import render
+from pokenav.grid.maps.render import Overlay
+from pokenav.grid.maps.schema import MapImage
+from pokenav.grid.maps.textgrid import parse
 from pokenav.png import Image
 
 ROOM = parse("""\

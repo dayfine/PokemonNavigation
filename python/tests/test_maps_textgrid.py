@@ -1,11 +1,11 @@
-"""Tests for pokenav.maps.textgrid: the legend table and the text format."""
+"""Tests for pokenav.grid.maps.textgrid: the legend table and the text format."""
 
 import unittest
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps import schema, textgrid
-from pokenav.maps.model import OPEN, WALL, Behavior, Cell, GridMap2D
-from pokenav.maps.textgrid import STANDARD, Legend
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps import schema, textgrid
+from pokenav.grid.maps.model import OPEN, WALL, Behavior, Cell, GridMap2D
+from pokenav.grid.maps.textgrid import STANDARD, Legend
 
 #   A small map with most of the legend. Row 2 is a ledge with a gap at
 #   x = 4; the bottom row has a sign, an NPC and a door; (3, 0) is unknown.
