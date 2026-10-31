@@ -48,8 +48,7 @@ class TileError(NamedTuple):
 class ModeModel(NamedTuple):
     """One mode's numbers. `tile_cost` is the time of a tile against
     walking's; `dpad` is None where taps are not used to count tiles. Any
-    error with a `spread(tiles)` method will do, such as
-    `routing.belief.OpenLegError`."""
+    error with a `spread(tiles)` method will do."""
 
     tile_cost: float
     dpad: Optional[TileError]

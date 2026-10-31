@@ -12,22 +12,28 @@ chooses legs that keep it small:
 - an **open** leg (about n tiles) spreads it: each state may end anywhere
   from n - k to n + k tiles on. It is walked as counted D-pad taps or as a
   timed stick hold (`routing.execution`), each with its own k from the
-  game's error model (`physics.model`): BDSP's taps are exact (k = 0), its
-  stick holds are not;
+  game's error model (`physics.model.TileError`): BDSP's taps are exact
+  (k = 0), its stick holds are off by about 0.15 tile a tile, so holds up to
+  11 tiles land exactly and a 14-tile hold may miss by one;
 - a **door** leg steps through the door ahead, into a loaded map or onto the
   goal.
 
-A leg that may run into a door, off the loaded maps, into a person or onto
-unknown ground is refused: the plan could not tell where the player went.
+A plan starts from one known tile: the bot clips to a wall or corner before
+it plans, and from there the position is known after every exact leg. The
+belief only grows at an open leg, and must be absorbed by what follows: a
+wall or ledge leg, or a goal region wider than the spread (a 14-tile hold
+into a 4-wide street). A leg that may run into a door, off the loaded maps,
+into a person or onto unknown ground is refused: the plan could not tell
+where the player went.
 With a game's `ExecutionModel` the search also tracks the facing (a D-pad or
 door leg toward a new direction starts with a tap that only turns, which
 costs `turn_tap`) and, when the player has a bike, the mode.
 The search is Dijkstra over beliefs, refusing any belief larger than
-`max_spread`. Each planned leg says what proves it ended where planned (a
-wall bump, a ledge landing, or nothing for an open leg) and the set of
-states it may leave the player in.
+`max_spread` (3 by default: the most spread measured). Each planned leg
+says what proves it ended where planned (a wall bump, a ledge landing, or
+nothing for an open leg) and the set of states it may leave the player in.
 
-    plan = plan_belief(world, {start}, goal=Place("Route 202", Tile(30, 19)))
+    plan = plan_belief(world, start, goal=Place("Route 202", Tile(30, 19)))
     for leg in plan:
         print(describe(leg))   # "clip east (4 tiles) -> Route 202 (30, 22)"
 """
@@ -45,7 +51,7 @@ from pokenav.grid.movement import (
 )
 from pokenav.grid.routing.execution import TAPPED, Execution
 from pokenav.grid.routing.shortest import Costs
-from pokenav.physics.model import ExecutionModel, Mode, ModeModel
+from pokenav.physics.model import ExecutionModel, Mode, ModeModel, TileError
 
 Belief = FrozenSet[WorldState]
 
@@ -59,21 +65,15 @@ class LegEnd(enum.Enum):
     DOOR = "door"      #   through the door ahead: the fade
 
 
-class OpenLegError(NamedTuple):
-    """How far an open leg of n tiles may end from n: `base` + n // `per`
-    tiles either way, or exactly n for legs of `exact_up_to` tiles or fewer.
-    The defaults allow one tile of error up to 4 tiles, two from 5 (on BDSP a
-    7-tile hold once went 9). A parameter until the physics model measures
-    it."""
+#   A stick hold's error as measured on BDSP (games/bdsp/MEASUREMENTS.md
+#   results 2026-10-31, #1 and #3): about 0.15 tile a tile, with no slide
+#   after letting go. The default until a game's parameter file gives its own.
+MEASURED_STICK = TileError(per_tile=0.15)
 
-    base: int = 1
-    per: int = 5
-    exact_up_to: int = 0
-
-    def spread(self, tiles: int) -> int:
-        if tiles <= self.exact_up_to:
-            return 0
-        return self.base + tiles // self.per
+#   The most states a belief may hold by default. On the 2026-10-31 BDSP runs
+#   no open leg spread further than a tile either way; a wider belief wants a
+#   wall leg first.
+MAX_SPREAD = 3
 
 
 class BeliefCosts(NamedTuple):
@@ -88,8 +88,8 @@ class BeliefCosts(NamedTuple):
     path: Costs = Costs()
     per_leg: float = 2.0
     open_stop: float = 8.0
-    error: OpenLegError = OpenLegError()
-    max_spread: int = 5
+    error: TileError = MEASURED_STICK
+    max_spread: int = MAX_SPREAD
     max_open_tiles: int = 12
     execution: Optional[ExecutionModel] = None
 
@@ -306,20 +306,24 @@ class BeliefPlanner:
 
     #   ---- search ----
 
-    def plan(self, start: Iterable[WorldState], goal: Goal, facing: Optional[Direction] = None,
+    def plan(self, start: WorldState, goal: Goal, facing: Optional[Direction] = None,
              bike: bool = False) -> Optional[List[PlannedLeg]]:
-        """The cheapest legs that take every state in `start` to states that
-        all meet `goal`, or None. `facing` is the start facing (None: not
-        known); with `bike`, legs may be ridden (if the game has a bike).
+        """The cheapest legs from `start`, one known state, to states that
+        all meet `goal`, or None. Raises TypeError for a set of states: clip
+        to a wall first (`routing.localize` finds the legs), then plan.
+        `facing` is the start facing (None: not known); with `bike`, legs may
+        be ridden (if the game has a bike).
 
         A* over (belief, facing, mode). The estimate for a belief is the most
         tiles any of its states still has to walk to the goal, times the
         cheapest tile cost: every leg costs at least that per tile each state
         walks, so the estimate never overshoots."""
+        if not isinstance(start, WorldState):
+            raise TypeError("plan from one known state, not %r" % (start,))
         is_goal = goal if callable(goal) else (lambda state: state.place == goal)
         modes = [Mode.FOOT] + ([Mode.BIKE] if bike and self.model.bike is not None else [])
         tile = self.costs.path.tile * min(self.model.mode(mode).tile_cost for mode in modes)
-        first = _Node(frozenset(start), facing, Mode.FOOT)
+        first = _Node(frozenset({start}), facing, Mode.FOOT)
         to_goal = self._tiles_to_goal(first.belief, is_goal)
         estimate = lambda node: tile * max(to_goal.get(s, float("inf")) for s in node.belief)
         order = itertools.count()
@@ -414,7 +418,7 @@ def _distances_from(sources: List[WorldState], edges: Dict[WorldState, List[Tupl
     return distance
 
 
-def plan_belief(world: World, start: Iterable[WorldState], goal: Goal, costs: BeliefCosts = BeliefCosts(),
+def plan_belief(world: World, start: WorldState, goal: Goal, costs: BeliefCosts = BeliefCosts(),
                 rules: ElevationRules = FLAT, objects: AbstractSet[Place] = frozenset(),
                 facing: Optional[Direction] = None, bike: bool = False) -> Optional[List[PlannedLeg]]:
     """`BeliefPlanner(world, costs, rules, objects).plan(start, goal, facing, bike)`."""

@@ -10,6 +10,7 @@ from pokenav.grid.maps.world import Place, World
 from pokenav.grid.movement import WorldState
 from pokenav.grid.routing.belief import BeliefCosts, BeliefPlanner, LegEnd
 from pokenav.grid.routing.localize import anchor, synchronize, use_localization
+from pokenav.physics.model import TileError
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
@@ -69,19 +70,34 @@ class SynchronizeTest(unittest.TestCase):
 
 
 class InsertTest(unittest.TestCase):
-    def test_the_planner_localizes_when_a_belief_grows_too_large(self):
-        #   Anywhere in the 2 x 2 at the top left, to the corner, with at most
-        #   one state after each leg: no single leg does it, but north then
-        #   west does.
-        start = [at(1, 1), at(2, 1), at(1, 2), at(2, 2)]
-        tight = BeliefCosts(max_spread=1)
-        self.assertIsNone(planner_for(ROOM_TEXT, tight).plan(start, Place("M", Tile(1, 1))))
-        planner = use_localization(planner_for(ROOM_TEXT, tight))
-        legs = planner.plan(start, Place("M", Tile(1, 1)))
-        self.assertIsNotNone(legs)
-        self.assertEqual(legs[-1].after, {at(1, 1)})
-        self.assertTrue(all(leg.end is LegEnd.WALL for leg in legs))
+    #   A street that runs off the known map at the east, with a person at
+    #   (5, 1) and a nook at (7..9, 2). From (6, 1), east of the person, no
+    #   wall leg is allowed: west is the person, east the unknown, north and
+    #   south walls at once. A hold east may miss a tile; two wall legs then
+    #   bring the belief to the nook's corner.
+    STREET_TEXT = """\
+###########
+#....N....?
+#.....#...#
+###########
+"""
+    PERSON = frozenset({Place("M", Tile(5, 1))})
 
+    def planner(self, costs):
+        return BeliefPlanner(World([parse(self.STREET_TEXT, name="M")]), costs, objects=self.PERSON)
+
+    def test_the_planner_localizes_when_a_belief_grows_too_large(self):
+        #   With at most one state after each leg, the hold's two states end
+        #   the search; with localization they are walked to the corner.
+        start, goal = at(6, 1), Place("M", Tile(9, 2))
+        tight = BeliefCosts(max_spread=1, error=TileError(overshoot=1))
+        self.assertIsNone(self.planner(tight).plan(start, goal))
+        planner = use_localization(self.planner(tight))
+        legs = planner.plan(start, goal)
+        self.assertIsNotNone(legs)
+        self.assertEqual([leg.end for leg in legs], [LegEnd.OPEN, LegEnd.WALL, LegEnd.WALL])
+        self.assertGreater(len(legs[0].after), tight.max_spread)
+        self.assertEqual(legs[-1].after, {at(9, 2)})
 
 if __name__ == "__main__":
     unittest.main()

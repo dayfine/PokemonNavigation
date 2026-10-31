@@ -24,7 +24,7 @@ from pokenav.grid.routing.belief import BeliefPlanner
 from pokenav.grid.routing.execution import bot_legs
 
 planner = BeliefPlanner(world, bdsp.belief_costs())
-legs = planner.plan([start], goal, facing=Direction.NORTH, bike=False)
+legs = planner.plan(start, goal, facing=Direction.NORTH, bike=False)
 bot_legs(legs)    # [("door", "S"), ("dpad", "W", 20), ("door", "N")]
 ```
 
@@ -55,9 +55,11 @@ or run into a door, edge or person on the way, are refused. So:
 
 - **Known start, exact taps**: `dpad`. 20 taps along Oreburgh's street cost a
   turn tap and 20 tiles; a clip to the street's end and taps back cost more.
-- **Uncertain start**: `clip` first, then `dpad` the offset. Taps from a
-  belief three tiles wide end three tiles wide and miss a one-tile door; a
-  clip brings the belief to one tile.
+- **Uncertain start**: the planner starts from one known tile. A bot that is
+  not sure of its tile clips to a wall first (`routing.localize.synchronize`
+  finds the legs: a clip brings a belief three tiles wide to one tile), then
+  plans. Taps counted from a belief three tiles wide would end three tiles
+  wide and miss a one-tile door.
 - **`stick`**: only where its error is harmless (short legs, or a clip or
   ledge after it that collapses the spread), and on FRLG where it is exact. A
   20-tile stick hold on BDSP may end a tile off and is refused before a door.

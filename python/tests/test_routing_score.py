@@ -14,18 +14,19 @@ from pokenav.grid.maps.schema import Connection
 from pokenav.grid.maps.textgrid import parse
 from pokenav.grid.maps.world import Place, World
 from pokenav.grid.movement import WorldState
-from pokenav.grid.routing.belief import BeliefCosts, BeliefPlanner, LegEnd, OpenLegError
+from pokenav.grid.routing.belief import BeliefCosts, BeliefPlanner, LegEnd
 from pokenav.grid.routing.score import (
     WEIGHTS, ScoreOptions, checks, legs_from_path, plan_ranked, propose, rank, replay, score,
 )
 from pokenav.grid.routing.shortest import Costs, follow, shortest_path
+from pokenav.physics.model import TileError
 
 from tests.paths import GAMES
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
 #   Open legs land exactly here, so a route's risk comes only from margins.
-EXACT = BeliefCosts(error=OpenLegError(base=0, exact_up_to=99))
+EXACT = BeliefCosts(error=TileError())
 
 #   A room with a pillar at (5, 3).
 ROOM = World([parse("""\
