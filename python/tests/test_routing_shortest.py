@@ -9,7 +9,7 @@ import unittest
 from pokenav.games import frlg
 from pokenav.geometry import Direction, Tile
 from pokenav.maps.model import Behavior
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.maps.world import Place, World
 from pokenav.movement import WorldState
 from pokenav.routing.shortest import Costs, MoveKind, follow, shortest_path
@@ -21,7 +21,7 @@ N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
 
 def world_of(text, name="M"):
-    return World([read(text, name=name)])
+    return World([parse(text, name=name)])
 
 
 def at(x, y, name="M", elevation=0):

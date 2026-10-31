@@ -13,7 +13,7 @@ tests and docs. The full plan, and the review that shaped it, is
 
 3. `maps.model`: cells (collision, elevation, behavior) and one map.
 4. `maps.schema`: the JSON map file, the source of truth for a map.
-   `maps.textgrid`: the character legend as a two-way table, to read, write
+   `maps.textgrid`: the character legend as a two-way table, to parse, serialize
    and show grids as text.
 5. `movement`: what one press does on one map (walls, ledges, elevation).
 6. `maps.world`: maps joined by connections and warps.
