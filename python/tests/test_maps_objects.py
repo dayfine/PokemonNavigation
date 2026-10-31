@@ -10,13 +10,13 @@ from pokenav.maps.objects import (
     walls_around, watched_tiles,
 )
 from pokenav.maps.schema import Connection, MapFile, Npc, Sign, Wander
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.maps.world import Place, World
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
 #   Row 2 is a ledge with a gap at x = 4; a sign at (1, 4); an NPC at (3, 4).
-SMALL = read("""\
+SMALL = parse("""\
 #..?..#
 #..,,.#
 #vvv..#
@@ -89,19 +89,19 @@ class AnchorTest(unittest.TestCase):
         self.assertTrue(is_corner(grid, Tile(1, 3)))
         self.assertFalse(is_corner(grid, Tile(1, 1)))
         self.assertFalse(is_corner(grid, Tile(3, 3)))      # only the ledge, north
-        self.assertFalse(is_corner(read("#.#\n").grid, Tile(1, 0)))  # walls east and west
+        self.assertFalse(is_corner(parse("#.#\n").grid, Tile(1, 0)))  # walls east and west
 
 
 class ScreenCoverageTest(unittest.TestCase):
     def test_a_small_room_shows_black_at_its_walls(self):
-        house = read("######\n#....#\n#....#\n#....#\n#....#\n######\n", name="House")
+        house = parse("######\n#....#\n#....#\n#....#\n#....#\n######\n", name="House")
         world = World([house])
         self.assertGreater(world.off_map_fraction(Place("House", Tile(1, 1)), frlg.VIEWPORT), 0.5)
 
     def test_connected_maps_count_as_shown(self):
-        route = read((("." * 20) + "\n") * 40, name="Route")
+        route = parse((("." * 20) + "\n") * 40, name="Route")
         route.connections = [Connection(N, "Town", 0)]
-        town = read((("." * 20) + "\n") * 20, name="Town")
+        town = parse((("." * 20) + "\n") * 20, name="Town")
         town.connections = [Connection(S, "Route", 0)]
         world = World([route, town])
         viewport = frlg.VIEWPORT
