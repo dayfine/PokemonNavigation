@@ -43,6 +43,8 @@ int main(int argc, char** argv){
     Database database;
     add_tests_LegPlanner(database);
     add_tests_TileGrid(database);
+    add_tests_Physics(database);
+    add_tests_Simulator(database);
 
     size_t run = 0;
     size_t failed = 0;

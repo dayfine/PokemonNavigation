@@ -15,6 +15,8 @@ add_library(pokenav
     src/Grid.cpp
     src/TileGrid.cpp
     src/MapSet.cpp
+    src/Physics.cpp
+    src/Simulator.cpp
 )
 target_include_directories(pokenav PUBLIC include)
 
@@ -22,6 +24,8 @@ add_executable(pokenav_tests
     tests/main.cpp
     tests/LegPlanner_tests.cpp
     tests/TileGrid_tests.cpp
+    tests/Physics_tests.cpp
+    tests/Simulator_tests.cpp
 )
 target_link_libraries(pokenav_tests PRIVATE pokenav)
 target_compile_definitions(pokenav_tests PRIVATE

@@ -49,6 +49,8 @@ std::string games_dir();
 
 void add_tests_LegPlanner(Database& database);
 void add_tests_TileGrid(Database& database);
+void add_tests_Physics(Database& database);
+void add_tests_Simulator(Database& database);
 
 
 
