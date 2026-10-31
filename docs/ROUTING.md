@@ -54,3 +54,31 @@ The leg planner alone does not reproduce Route 1's drawn line: with
 grass tiles, because the drawn line's legs mostly end in the open. What
 makes those legs safe is that each ledge drop pins the row, which the
 belief-set planner models.
+
+## Robust plans (`routing.belief`)
+
+The planner tracks a belief: the set of states the player may be in. Each
+leg is held one way and ends in one of three ways, which is also what proves
+it ended there:
+
+| Leg end | Held until | Belief after |
+|---|---|---|
+| `WALL` | the player is stopped | each state's stop: a wall collapses a row or column |
+| `LEDGE` | the first ledge hop lands | each state's landing: a drop pins the row |
+| `OPEN` | about n tiles | each state n - k to n + k tiles on, k from `OpenLegError` |
+
+`OpenLegError(base=1, per=5)` allows `1 + n // 5` tiles of error (a
+parameter until the physics model measures it). A leg that may run into a
+door, off the loaded maps, onto unknown ground or into a person is refused,
+and so is an open leg over a ledge (the hop's time is fixed, so the hold
+would not match the tiles). `plan_belief(world, starts, goal, costs)` is A*
+over beliefs: each leg costs `per_leg` plus the path weights of its longest
+walk and most grass, plus `open_stop` if it ends in the open; beliefs larger
+than `max_spread` (5) are refused; the estimate is the longest single-state
+walk left to the goal. Each `PlannedLeg` carries its end kind and the belief
+after it, for the walker to check on arrival.
+
+Search time grows with the maps: Route 202 plans in well under a second,
+the story maps' 3 x 3 start to Sandgem's Pokemon Center in about a second,
+but Viridian City, Route 1 and Pallet Town together take minutes, so
+`routing.score` ranks given routes there rather than searching.
