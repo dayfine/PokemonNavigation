@@ -64,7 +64,7 @@ The legend is one two-way table between characters and cell kinds
 | Char | Cell | Char | Cell |
 |---|---|---|---|
 | `#` | wall | `.` | open ground |
-| `"` | tall grass | `v ^ < >` | ledge, crossed south / north / west / east |
+| `,` | tall grass | `v ^ < >` | ledge, crossed south / north / west / east |
 | `D` | door (walk into) | `W` | warp (step onto) |
 | `S` | sign | `~` | water |
 | `=` | counter | `i` | ice |
@@ -141,3 +141,18 @@ imported with the flag in their note; signs readable from any side are stored
 as read facing north; door mats (arrow warps) fire on the step onto them,
 while the game fires them on a press of their direction while standing on
 them.
+
+## BDSP maps (`games/bdsp/`, `games.bdsp`)
+
+The story's first maps, read from Bulbapedia's DP maps and checked on the
+console, are map files in `games/bdsp/maps/`: Route 201, Sandgem Town,
+Route 202 and Jubilife City. Each file's notes say how its grid was read and
+what was measured. `games.bdsp.story_world()` joins Route 201, Sandgem Town
+and Route 202; Jubilife City stays on its own until its stairs are mapped.
+Standing NPCs are walls in these worlds: on the console a standing trainer
+stops a held walk.
+
+`games/bdsp/wall_hits.json` lists measured walks (start, direction, where the
+player stopped, tiles, held or not) and where the maps join; the tests check
+the maps against every entry. Add a measurement there when a walk on the
+console disagrees with the map, then fix the map file.

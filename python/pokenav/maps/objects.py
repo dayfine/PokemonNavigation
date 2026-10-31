@@ -10,11 +10,12 @@ module answers questions about them on a grid.
     blocking_tiles(map_file, Blocking.STATIC)   # tiles of NPCs that stand still
 """
 
+import copy
 import enum
 from typing import Dict, List, Set
 
 from pokenav.geometry import CLOCKWISE, Direction, Tile
-from pokenav.maps.model import MapGrid
+from pokenav.maps.model import WALL, MapGrid
 from pokenav.maps.schema import MapFile, Npc, Sign, Wander
 from pokenav.movement import FLAT, ElevationRules, PlayerState, held_at
 
@@ -82,6 +83,17 @@ def blocking_tiles(map_file: MapFile, blocking: Blocking) -> Set[Tile]:
                 tiles.update(wander_tiles(npc.wander))
                 tiles.add(npc.tile)
     return tiles
+
+
+def with_static_npcs_as_walls(map_file: MapFile) -> MapFile:
+    """A copy of `map_file` whose grid has a wall under every NPC that does
+    not wander. In games where a standing NPC stops a held walk like a wall
+    (measured on BDSP), this lets planners end legs against them."""
+    walled = copy.deepcopy(map_file)
+    for npc in map_file.npcs:
+        if npc.wander is None and walled.grid.contains(npc.tile):
+            walled.grid.set(npc.tile, WALL._replace(elevation=walled.grid.at(npc.tile).elevation))
+    return walled
 
 
 def walls_around(grid: MapGrid, tile: Tile, rules: ElevationRules = FLAT,

@@ -1,0 +1,27 @@
+{
+  "about": "Walks held in one direction until the player stopped, on BDSP's story maps. 'held' is whether the player was held in place (a wall) rather than leaving the known maps. Places are [map, x, y]. Checked by python/tests/test_games_bdsp.py against games/bdsp/maps/.",
+  "walks": [
+    {"from": ["Route 202", 19, 22], "direction": "west", "stop": ["Route 202", 3, 22], "tiles": 16, "held": true, "source": "console"},
+    {"from": ["Route 202", 19, 22], "direction": "north", "stop": ["Route 202", 19, 20], "tiles": 2, "held": true, "source": "console"},
+    {"from": ["Route 202", 19, 22], "direction": "east", "stop": ["Route 202", 30, 22], "tiles": 11, "held": true, "source": "console"},
+    {"from": ["Route 202", 30, 22], "direction": "north", "stop": ["Route 202", 30, 19], "tiles": 3, "held": true, "source": "console, from the post-catch save"},
+    {"from": ["Route 202", 30, 19], "direction": "west", "stop": ["Route 202", 22, 19], "tiles": 8, "held": true, "source": "console, from the post-catch save"},
+    {"from": ["Route 202", 22, 19], "direction": "south", "stop": ["Route 202", 22, 24], "tiles": 5, "held": true, "source": "console, from the post-catch save"},
+    {"from": ["Route 202", 7, 12], "direction": "north", "stop": ["Route 202", 7, 12], "tiles": 0, "held": true, "source": "console: trainer_a holds the player"},
+    {"from": ["Route 202", 22, 16], "direction": "east", "stop": ["Route 202", 30, 16], "tiles": 8, "held": true, "source": "console run r75: the east wall is at column 31 on row 16"},
+    {"from": ["Route 202", 30, 16], "direction": "north", "stop": ["Route 202", 30, 4], "tiles": 12, "held": true, "source": "console run r75: column 30 is open up to the trees above row 4"},
+    {"from": ["Route 202", 12, 8], "direction": "south", "stop": ["Route 202", 12, 22], "tiles": 14, "held": true, "source": "map: hops both ledges"},
+    {"from": ["Route 202", 15, 0], "direction": "north", "stop": ["Route 202", 15, 0], "tiles": 0, "held": false, "source": "map: the exit to Jubilife City"},
+    {"from": ["Route 202", 30, 22], "direction": "south", "stop": ["Sandgem Town", 29, 2], "tiles": 6, "held": true, "source": "console: stops above the Poke Mart"},
+    {"from": ["Sandgem Town", 29, 2], "direction": "west", "stop": ["Sandgem Town", 20, 2], "tiles": 9, "held": true, "source": "console"},
+    {"from": ["Sandgem Town", 20, 2], "direction": "south", "stop": ["Sandgem Town", 20, 5], "tiles": 3, "held": true, "source": "console: stops above the Pokemon Center's sign"},
+    {"from": ["Route 202", 29, 4], "direction": "south", "stop": ["Sandgem Town", 28, 2], "tiles": 24, "held": true, "source": "map: through the gap east of the north ledge, over the south ledge, into Sandgem Town"},
+    {"from": ["Route 201", 52, 3], "direction": "west", "stop": ["Route 201", 44, 3], "tiles": 8, "held": true, "source": "console: stops facing the Potion giver"}
+  ],
+  "joins": [
+    {"from": ["Route 201", 63, 4], "direction": "east", "to": ["Sandgem Town", 0, 7]},
+    {"from": ["Route 201", 63, 6], "direction": "east", "to": ["Sandgem Town", 0, 9]},
+    {"from": ["Sandgem Town", 24, 0], "direction": "north", "to": ["Route 202", 25, 25]},
+    {"from": ["Sandgem Town", 29, 0], "direction": "north", "to": ["Route 202", 30, 25]}
+  ]
+}
