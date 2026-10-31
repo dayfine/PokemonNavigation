@@ -6,8 +6,8 @@ import tempfile
 import unittest
 
 from pokenav.cli.import_frlg import import_maps
-from pokenav.maps import schema
-from pokenav.maps.pret import Checkout
+from pokenav.grid.maps import schema
+from pokenav.grid.maps.pret import Checkout
 
 from tests.test_maps_pret import LEDGE, TINY_BLOCKS, TINY_GAME, block, write_fixture
 

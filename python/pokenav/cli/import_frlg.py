@@ -17,8 +17,8 @@ import sys
 from typing import List, Optional, Sequence
 
 from pokenav.games import frlg
-from pokenav.maps import schema, textgrid
-from pokenav.maps.pret import Checkout
+from pokenav.grid.maps import schema, textgrid
+from pokenav.grid.maps.pret import Checkout
 
 
 def import_maps(checkout: Checkout, names: Sequence[str], out_dir: str) -> List[str]:
