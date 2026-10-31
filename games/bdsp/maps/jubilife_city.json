@@ -2,6 +2,7 @@
   "format": "pokenav-map/1",
   "name": "Jubilife City",
   "game": "bdsp",
+  "encounters": [],
   "legend": {
     "#": {"blocked": true},
     ".": {},
