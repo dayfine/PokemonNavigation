@@ -20,9 +20,9 @@ so the tile past Route 1's (10, 0) is Viridian City's (22, height - 1):
 
 from typing import Dict, Iterable, NamedTuple, Optional
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior, Cell, GridMap2D
-from pokenav.maps.schema import Connection, MapFile
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.model import Behavior, Cell, GridMap2D
+from pokenav.grid.maps.schema import Connection, MapFile
 
 #   The way a player walks out of a door they arrive through. Gen 3 and BDSP
 #   doors both face south; a game where they do not can pass its own.
