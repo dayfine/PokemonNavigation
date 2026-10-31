@@ -1,13 +1,13 @@
-"""Tests for pokenav.maps.world and stepping across maps with
-pokenav.movement.world_step: connections with offsets, and a door pair."""
+"""Tests for pokenav.grid.maps.world and stepping across maps with
+pokenav.grid.movement.world_step: connections with offsets, and a door pair."""
 
 import unittest
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.schema import Connection, MapFile, Warp
-from pokenav.maps.textgrid import parse
-from pokenav.maps.world import Arrival, Place, World
-from pokenav.movement import (
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.schema import Connection, MapFile, Warp
+from pokenav.grid.maps.textgrid import parse
+from pokenav.grid.maps.world import Arrival, Place, World
+from pokenav.grid.movement import (
     Blocked, BlockReason, Edge, Moved, Warped, WorldState, world_step, world_walk,
 )
 
