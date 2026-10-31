@@ -11,12 +11,12 @@ from pokenav.geometry import Tile
 from pokenav.maps import render
 from pokenav.maps.render import Overlay
 from pokenav.maps.schema import MapImage
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.png import Image
 
 from tests.paths import REPO
 
-ROOM = read("""\
+ROOM = parse("""\
 ######
 #....#
 #.,,.#
