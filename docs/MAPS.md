@@ -27,3 +27,31 @@ smaller than the viewport (a 6 x 6 house on a 15 x 10 screen) always shows
 black around it, which screen checks such as battle detection must allow for:
 `MapGrid.off_map_fraction(tile, viewport)` gives the black share of the
 screen while standing on `tile`.
+
+## Map files (`maps.schema`)
+
+A map's source of truth is a JSON file: rows of characters with the legend
+that decodes them, an optional elevation layer (one hex digit per tile), and
+named records for what is on the map:
+
+| Key | Holds |
+|---|---|
+| `format`, `name`, `game` | `"pokenav-map/1"`, the map's name, the game it is from |
+| `legend` | character → `{"blocked": bool, "behavior": name}`; both optional |
+| `rows`, `elevation` | the cells, top row first; elevation defaults to 0 |
+| `points` | named tiles (`name`, `tile`, `proof`: how a walk proves it is there) |
+| `npcs` | `name`, `tile`, `facing`, `sight` (trainers), `wander` (`low`, `high`, `rate`) |
+| `signs` | `name`, `tile`, `facing` (the way the player faces to read it) |
+| `buildings` | `name`, `kind` (`pokecenter`, `mart`, ...), `door` |
+| `warps` | `tile`, `to_map`, `to_warp` (index into that map's warps) |
+| `connections` | `direction`, `map`, `offset` (the other map's x or y is this map's minus `offset`) |
+| `notes` | `text` and `source`: where each fact came from |
+
+Tiles are `[x, y]`. Example: [examples/tiny_town.json](examples/tiny_town.json).
+
+```python
+from pokenav.maps import schema
+town = schema.load("docs/examples/tiny_town.json")
+town.point("DOORSTEP").tile        # Tile(x=1, y=1)
+schema.dump("out.json", town, {"#": WALL, ".": OPEN, "D": DOOR})
+```
