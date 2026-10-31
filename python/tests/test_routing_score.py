@@ -11,7 +11,7 @@ from pokenav.games import frlg
 from pokenav.geometry import Direction, Tile
 from pokenav.maps.model import LEDGE_DIRECTION, WALL
 from pokenav.maps.schema import Connection
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.maps.world import Place, World
 from pokenav.movement import WorldState
 from pokenav.routing.belief import BeliefCosts, BeliefPlanner, LegEnd, OpenLegError
@@ -28,7 +28,7 @@ N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 EXACT = BeliefCosts(error=OpenLegError(base=0, exact_up_to=99))
 
 #   A room with a pillar at (5, 3).
-ROOM = World([read("""\
+ROOM = World([parse("""\
 #########
 #.......#
 #.......#
@@ -99,7 +99,7 @@ class RankTest(unittest.TestCase):
         self.assertAlmostEqual(result.risk, 1 / (1 + 1))
 
     def test_localizations_and_grass(self):
-        world = World([read("#####\n#.,.#\n#...#\n#####\n", name="Room")])
+        world = World([parse("#####\n#.,.#\n#...#\n#####\n", name="Room")])
         planner = BeliefPlanner(world, EXACT)
         #   Anywhere in the 2 x 2 at the top left: north to the wall, then
         #   west to the wall, each shrinking the belief.
@@ -114,7 +114,7 @@ class RankTest(unittest.TestCase):
         self.assertEqual(score(planner, [at(1, 1)], across, Place("Room", Tile(3, 1))).grass, 1)
 
     def test_ledges_localize(self):
-        world = World([read("#...#\n#...#\n#vvv#\n#...#\n#####\n", name="Room")])
+        world = World([parse("#...#\n#...#\n#vvv#\n#...#\n#####\n", name="Room")])
         planner = BeliefPlanner(world, EXACT)
         route = legs(planner, at(2, 0), [("ledge", S)])
         goal = Place("Room", Tile(2, 3))
@@ -124,9 +124,9 @@ class RankTest(unittest.TestCase):
 
 class ChecksTest(unittest.TestCase):
     def test_each_leg_says_how_it_is_proven(self):
-        north = read("....\n....\n", name="North")
+        north = parse("....\n....\n", name="North")
         north.connections = [Connection(S, "South", 0)]
-        south = read("....\n#vv#\n....\n....\n####\n", name="South")
+        south = parse("....\n#vv#\n....\n....\n####\n", name="South")
         south.connections = [Connection(N, "North", 0)]
         world = World([north, south])
         planner = BeliefPlanner(world, EXACT)

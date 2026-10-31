@@ -7,7 +7,7 @@ import unittest
 from pokenav.games import bdsp
 from pokenav.geometry import Direction, Tile
 from pokenav.maps.schema import Warp
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.maps.world import Place, World
 from pokenav.movement import WorldState
 from pokenav.routing.legs import LegKind, describe, held, join_legs, plan_legs
@@ -17,7 +17,7 @@ N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
 
 def toy(text, warps=()):
-    map_file = read(text, name="Toy")
+    map_file = parse(text, name="Toy")
     map_file.warps = list(warps)
     return World([map_file])
 
@@ -43,7 +43,7 @@ class ToyGameTest(unittest.TestCase):
         self.assertEqual([(l.direction, l.to_wall) for l in legs], [(S, False), (E, True)], text(legs))
 
     def test_a_person_is_not_a_wall(self):
-        world = World([read("#####\n#..N#\n#####\n", name="Toy")])
+        world = World([parse("#####\n#..N#\n#####\n", name="Toy")])
         objects = {Place("Toy", Tile(3, 1))}
         legs = plan(world, (1, 1), (2, 1), objects=objects)
         self.assertEqual(len(legs), 1, text(legs))

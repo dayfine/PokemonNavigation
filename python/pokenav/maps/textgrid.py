@@ -1,9 +1,9 @@
 """Maps as text: the character legend, and a plain-text grid format.
 
 The legend is one two-way table between characters and cell kinds (a cell's
-`blocked` and `behavior`; elevation is its own layer). It is used to read,
-write and show grids; the map file (`maps.schema`) stays the source of truth
-and stores its own legend.
+`blocked` and `behavior`; elevation is its own layer). It is used to parse,
+serialize and show grids; the map file (`maps.schema`) stays the source of
+truth and stores its own legend.
 
 The standard legend:
 
@@ -26,28 +26,13 @@ The text format is the legend's rows, plus comments:
 
 Other comment lines are free text and are not kept.
 
-Command line (run from the repository root with PYTHONPATH=python):
-
-    python3 -m pokenav.maps.textgrid show docs/examples/tiny_town.json
-    // Map: Tiny Town
-    //   DOORSTEP 1 1
-    #D#  // 0
-    #N#  // 1
-    // Elevation:
-    // 333
-    // 333
-
-    python3 -m pokenav.maps.textgrid convert route.txt route.json   # text -> map file
-    python3 -m pokenav.maps.textgrid convert route.json route.txt   # map file -> text
+The command line for showing and converting grids is `pokenav.cli.textgrid`.
 """
 
-import argparse
 import re
-import sys
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from pokenav.geometry import Direction, Tile
-from pokenav.maps import schema
 from pokenav.maps.model import OPEN, Behavior, Cell, GridMap2D
 from pokenav.maps.schema import MapFile, NamedPoint, Npc
 
@@ -142,9 +127,9 @@ _POINT = re.compile(r"^//\s+([A-Z][A-Z0-9_]*)\s+(-?\d+)\s+(-?\d+)\s*$")
 _ELEVATION = re.compile(r"^//\s*Elevation:\s*$")
 
 
-#   ---- reading ----
+#   ---- parsing ----
 
-def read(text: str, legend: Legend = STANDARD, name: str = "") -> MapFile:
+def parse(text: str, legend: Legend = STANDARD, name: str = "") -> MapFile:
     """A map file from the text format. `name` is used if the text has no
     "// Map:" line. Raises ValueError for an unknown character or a row of
     the wrong width."""
@@ -208,9 +193,9 @@ def _with_elevation(cells: List[List[Cell]], elevation: List[str]) -> List[List[
             for row, levels in zip(cells, elevation)]
 
 
-#   ---- writing and showing ----
+#   ---- serializing and showing ----
 
-def write(map_file: MapFile, legend: Legend = STANDARD) -> str:
+def serialize(map_file: MapFile, legend: Legend = STANDARD) -> str:
     """The text format of `map_file`: name, named points, rows with NPCs
     marked, and the elevation layer if any tile is above 0. Raises KeyError
     for a cell the legend has no character for."""
@@ -249,39 +234,3 @@ def _elevation_lines(grid: GridMap2D) -> List[str]:
     if not any(level.strip("0") for level in levels):
         return []
     return ["// Elevation:"] + ["// " + level for level in levels]
-
-
-#   ---- command line ----
-
-def _load_any(path: str) -> MapFile:
-    if path.endswith(".json"):
-        return schema.load(path)
-    with open(path, encoding="utf-8") as f:
-        return read(f.read())
-
-
-def main(argv: Optional[List[str]] = None) -> int:
-    parser = argparse.ArgumentParser(prog="python3 -m pokenav.maps.textgrid",
-                                     description="Show or convert maps between text grids and map files.")
-    commands = parser.add_subparsers(dest="command", required=True)
-    show_cmd = commands.add_parser("show", help="print a map file or text grid as text")
-    show_cmd.add_argument("path")
-    convert = commands.add_parser("convert", help="text grid <-> map file, by extension (.json is a map file)")
-    convert.add_argument("source")
-    convert.add_argument("target")
-    args = parser.parse_args(argv)
-
-    if args.command == "show":
-        sys.stdout.write(write(_load_any(args.path)))
-        return 0
-    map_file = _load_any(args.source)
-    if args.target.endswith(".json"):
-        schema.dump(args.target, map_file, STANDARD.cells())
-    else:
-        with open(args.target, "w", encoding="utf-8") as f:
-            f.write(write(map_file))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

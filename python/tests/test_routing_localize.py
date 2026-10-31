@@ -5,7 +5,7 @@ import unittest
 
 from pokenav.geometry import Direction, Tile
 from pokenav.maps.objects import is_corner
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.maps.world import Place, World
 from pokenav.movement import WorldState
 from pokenav.routing.belief import BeliefCosts, BeliefPlanner, LegEnd
@@ -28,7 +28,7 @@ def at(x, y, name="M"):
 
 
 def planner_for(text, costs=BeliefCosts()):
-    return BeliefPlanner(World([read(text, name="M")]), costs)
+    return BeliefPlanner(World([parse(text, name="M")]), costs)
 
 
 def every_open_tile(planner, name="M"):

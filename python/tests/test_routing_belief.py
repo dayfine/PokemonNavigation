@@ -7,7 +7,7 @@ import unittest
 
 from pokenav.games import bdsp, frlg
 from pokenav.geometry import Direction, Tile
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.maps.world import Place, World
 from pokenav.movement import WorldState
 from pokenav.routing.belief import (
@@ -16,7 +16,7 @@ from pokenav.routing.belief import (
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
-ROOM = World([read("""\
+ROOM = World([parse("""\
 #######
 #.....#
 #.....#
@@ -73,7 +73,7 @@ class BeliefTest(unittest.TestCase):
 
     def test_avoids_doors(self):
         #   North from (2, 3) would walk into the door; the plan goes round.
-        world = World([read("##D###\n#....#\n#....#\n#....#\n######\n", name="Room")])
+        world = World([parse("##D###\n#....#\n#....#\n#....#\n######\n", name="Room")])
         legs = plan_belief(world, [at(2, 3)], Place("Room", Tile(1, 1)))
         self.assertIsNotNone(legs)
         self.assertNotIn((N, frozenset({at(2, 1)})), [(l.direction, l.after) for l in legs])
@@ -82,7 +82,7 @@ class BeliefTest(unittest.TestCase):
         self.assertEqual(legs[-1].after, {at(1, 1)}, text(legs))
 
     def test_a_ledge_drop_pins_the_row(self):
-        world = World([read("""\
+        world = World([parse("""\
 #.....#
 #.....#
 #vvvvv#
