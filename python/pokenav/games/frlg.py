@@ -11,10 +11,10 @@ The command line that imports maps from a pokefirered checkout is
 `pokenav.cli.import_frlg`.
 """
 
-from pokenav.maps.model import Behavior, Viewport
-from pokenav.maps.pret import Checkout, PretGame
-from pokenav.movement import ElevationRules
-from pokenav.routing.belief import OpenLegError
+from pokenav.grid.maps.model import Behavior, Viewport
+from pokenav.grid.maps.pret import Checkout, PretGame
+from pokenav.grid.movement import ElevationRules
+from pokenav.grid.routing.belief import OpenLegError
 
 #   A transition tile: steps onto or off it ignore elevation.
 TRANSITION_ELEVATION = 0

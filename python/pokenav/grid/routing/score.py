@@ -25,10 +25,10 @@ on arrival.
 
 from typing import Dict, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 
-from pokenav.maps.world import Place, World
-from pokenav.movement import WorldState
-from pokenav.routing.belief import Belief, BeliefPlanner, Goal, LegEnd, PlannedLeg
-from pokenav.routing.shortest import Costs, Move, MoveKind, Path, shortest_path
+from pokenav.grid.maps.world import Place, World
+from pokenav.grid.movement import WorldState
+from pokenav.grid.routing.belief import Belief, BeliefPlanner, Goal, LegEnd, PlannedLeg
+from pokenav.grid.routing.shortest import Costs, Move, MoveKind, Path, shortest_path
 
 #   The path weights `propose` tries: every pair of turn and grass weight,
 #   from cutting through grass to going far round it.
