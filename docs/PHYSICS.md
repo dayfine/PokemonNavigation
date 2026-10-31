@@ -9,7 +9,9 @@ Game-specific plans: [BDSP](../games/bdsp/MEASUREMENTS.md).
 ## Inputs and distance
 
 - **Tap**: a stick hold of N ms from standing still. How many tiles, by N, as a
-  distribution. BDSP: 160 ms moved one tile across; 200 ms one row.
+  distribution. BDSP (measured 2026-10-31): a 160 ms stick hold moves 0.9 to 1.2
+  tiles; a 160 ms D-pad tap moves exactly one tile. See
+  [games/bdsp/MEASUREMENTS.md](../games/bdsp/MEASUREMENTS.md).
 - **Runs of taps**: taps with a gap of G ms between them. BDSP: six 160 ms taps
   400 ms apart moved 6 tiles by hand and 7 on one run; six taps that each
   waited for the screen to settle moved 7.
