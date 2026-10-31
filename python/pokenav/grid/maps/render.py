@@ -13,10 +13,10 @@ The command line is `pokenav.cli.render`.
 
 from typing import Collection, Dict, List, NamedTuple, Sequence
 
-from pokenav.geometry import Tile
-from pokenav.maps.model import Behavior, Cell, GridMap2D
-from pokenav.maps.schema import MapImage
-from pokenav.maps.textgrid import STANDARD, Legend, show
+from pokenav.grid.geometry import Tile
+from pokenav.grid.maps.model import Behavior, Cell, GridMap2D
+from pokenav.grid.maps.schema import MapImage
+from pokenav.grid.maps.textgrid import STANDARD, Legend, show
 from pokenav.png import Color, Image
 
 
