@@ -125,6 +125,9 @@ class BeliefPlanner:
         self.objects = objects
         self._trajectories: Dict[Tuple[WorldState, Direction], Tuple[List[_Walk], str]] = {}
         self._open_tables: Dict[Tuple[WorldState, Direction], List[Optional[_Walk]]] = {}
+        #   Brings a belief larger than max_spread back to one state, as legs
+        #   with their costs; None by default. See routing.localize.
+        self.localizer: Optional[Callable[[Belief], Optional[List[Tuple[PlannedLeg, float]]]]] = None
 
     #   ---- legs from one belief ----
 
@@ -245,7 +248,7 @@ class BeliefPlanner:
         estimate = lambda belief: self.costs.path.tile * max(to_goal.get(s, float("inf")) for s in belief)
         order = itertools.count()
         best: Dict[Belief, float] = {first: 0.0}
-        came_from: Dict[Belief, Tuple[Belief, PlannedLeg]] = {}
+        came_from: Dict[Belief, Tuple[Belief, List[PlannedLeg]]] = {}
         queue = [(estimate(first), next(order), first)]
         closed = set()
         while queue:
@@ -256,15 +259,28 @@ class BeliefPlanner:
             cost = best[belief]
             if all(is_goal(state) for state in belief):
                 return _legs_to(belief, came_from)
-            for leg, leg_cost in self.legs_from(belief):
-                after = leg.after
-                if len(after) > self.costs.max_spread or after == belief:
+            for legs, legs_cost in self._steps_from(belief):
+                after = legs[-1].after
+                if after == belief:
                     continue
-                if cost + leg_cost < best.get(after, float("inf")):
-                    best[after] = cost + leg_cost
-                    came_from[after] = (belief, leg)
-                    heapq.heappush(queue, (cost + leg_cost + estimate(after), next(order), after))
+                if cost + legs_cost < best.get(after, float("inf")):
+                    best[after] = cost + legs_cost
+                    came_from[after] = (belief, legs)
+                    heapq.heappush(queue, (cost + legs_cost + estimate(after), next(order), after))
         return None
+
+    def _steps_from(self, belief: Belief) -> Iterable[Tuple[List[PlannedLeg], float]]:
+        """Each leg from `belief` that keeps it within `max_spread`; a leg
+        that spreads it further is kept only if the `localizer` (see
+        `routing.localize`) brings it back to one state, and then comes with
+        the localizing legs after it."""
+        for leg, leg_cost in self.legs_from(belief):
+            if len(leg.after) <= self.costs.max_spread:
+                yield [leg], leg_cost
+                continue
+            tail = self.localizer(leg.after) if self.localizer is not None else None
+            if tail is not None:
+                yield [leg] + [t for t, _ in tail], leg_cost + sum(c for _, c in tail)
 
     def _tiles_to_goal(self, start: Belief, is_goal: Callable[[WorldState], bool]) -> Dict[WorldState, int]:
         """For every state reachable from `start` one press at a time, the
@@ -309,10 +325,10 @@ def plan_belief(world: World, start: Iterable[WorldState], goal: Goal, costs: Be
     return BeliefPlanner(world, costs, rules, objects).plan(start, goal)
 
 
-def _legs_to(belief: Belief, came_from: Dict[Belief, Tuple[Belief, PlannedLeg]]) -> List[PlannedLeg]:
-    legs = []
+def _legs_to(belief: Belief, came_from: Dict[Belief, Tuple[Belief, List[PlannedLeg]]]) -> List[PlannedLeg]:
+    steps = []
     while belief in came_from:
-        belief, leg = came_from[belief]
-        legs.append(leg)
-    legs.reverse()
-    return legs
+        belief, legs = came_from[belief]
+        steps.append(legs)
+    steps.reverse()
+    return [leg for legs in steps for leg in legs]

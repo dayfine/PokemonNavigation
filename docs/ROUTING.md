@@ -119,3 +119,18 @@ ledges, gives a zigzag with more turns and grass, which ranks below the
 drawn line; counting ledges as unprotected adds 6 to the drawn line's risk.
 Open legs on FRLG are taken as exact (`games.frlg.OPEN_LEG_ERROR`), a guess
 until measured.
+
+## Localizing (`routing.localize`)
+
+A localizing sequence is a few wall or ledge legs that take every state of a
+region to one state: "north to the wall, then west to the wall" puts a player
+anywhere in an open room in its north-west corner, which is then an anchor.
+`synchronize(planner, region, max_legs=3)` finds the fewest such legs
+(cheapest among them) by breadth-first search over beliefs; `anchor(legs)`
+is where they end. Some regions have none: two closed rooms that look the
+same from inside send each player to their own corner.
+
+`use_localization(planner)` lets the robust planner take a leg that spreads
+the belief past `max_spread` when a localizing sequence follows it; the plan
+then includes those legs. It is off unless asked for, since each oversize
+belief costs a search.
