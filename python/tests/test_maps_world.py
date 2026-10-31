@@ -5,7 +5,7 @@ import unittest
 
 from pokenav.geometry import Direction, Tile
 from pokenav.maps.schema import Connection, MapFile, Warp
-from pokenav.maps.textgrid import read
+from pokenav.maps.textgrid import parse
 from pokenav.maps.world import Arrival, Place, World
 from pokenav.movement import (
     Blocked, BlockReason, Edge, Moved, Warped, WorldState, world_step, world_walk,
@@ -15,7 +15,7 @@ N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
 
 def map_file(name, text, connections=(), warps=()):
-    grid = read(text, name=name).grid
+    grid = parse(text, name=name).grid
     return MapFile(grid, connections=list(connections), warps=list(warps))
 
 
