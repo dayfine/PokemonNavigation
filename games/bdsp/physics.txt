@@ -1,0 +1,31 @@
+# BDSP movement model (PokemonNavigation PhysicsModel, cpp/include/pokenav/Physics.h).
+#
+# name  value  measured|guessed  note
+#
+# From the Arduino-Source BDSP simulator (branch bdsp/grid-sim,
+# PokemonBDSP_AutoStory_Sim.h: SimModel, 2026-10-30). "measured" here means
+# our own input timing (what the program sends), or a value backed by a
+# record in measurements/bdsp/. Everything else is guessed until a fit from
+# measurements/bdsp/ replaces it (see docs/TRACES.md).
+
+# Walking. Not yet fitted to the traces' walks (moving_ms against tiles).
+ms_per_tile_across      160   guessed   SimModel; walks east/west on 2026-10-30, not yet fitted
+ms_per_tile_up_down     240   guessed   SimModel; walks north/south on 2026-10-30, not yet fitted
+walk_overhead_ms        1050  guessed   SimModel: start delay plus the wait to read still (two still 400 ms slices)
+still_lag_mean_tiles    0     guessed   0 in the open; near Jubilife's TV station r161 saw the stop only at 14 tiles' time (SimModel approach leg: 3)
+
+# Turning.
+turn_ms                 400   measured  input timing: route_turn() is a 100 ms tap, 300 ms wait
+turn_when_facing_steps  1     guessed   seen once: r161c, a turn north while facing north walked into the plaza
+
+# Taps and single holds.
+tap_ms                  560   measured  input timing: taps() is a 160 ms hold, 400 ms apart
+taps_settle_ms          800   measured  input timing: taps() waits 800 ms after the last
+tap_extra_tile_chance   0.08  guessed   six taps went six by hand, seven in r160a
+tile_ms                 1000  guessed   SimModel: tile() hold and settle
+tile_extra_tile_chance  0.08  guessed   six tile() calls went seven once
+step_ms                 1200  guessed   SimModel: step() including the turn
+
+# NPCs that wander (the Poketch Company clown).
+npc_move_min_ms         2000  guessed   SimModel: a random step every few seconds
+npc_move_max_ms         5000  guessed   SimModel

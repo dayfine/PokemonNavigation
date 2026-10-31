@@ -31,8 +31,28 @@ AutoStory programs.
 | `python/` | Tools: map import (images, pret data), measurement analysis, plots, route drawing. |
 | `games/<game>/` | Per-game data: grids, measured physics parameters, landmarks. |
 | `measurements/` | Raw console measurements (what was pressed, what happened), so parameters can be refit. |
-| `docs/` | The mapping process and the physics to measure. |
+| `docs/` | The mapping process, the physics to measure, the trace format. |
+| `scripts/` | Helpers for the lab, e.g. `collect_bdsp_trace.sh` after a console run. |
+
+## Build and test
+
+```sh
+cmake -S cpp -B build && cmake --build build -j4 && ./build/pokenav_tests   # -v for plans and statistics
+cd python && python3 -m unittest discover tests
+```
+
+## Tools
+
+- `python3 -m pokenav.traces extract <SerialPrograms.log> [--since TIME] [--out FILE.jsonl]`:
+  movement traces from console runs ([docs/TRACES.md](docs/TRACES.md)).
+- `python3 -m pokenav.maps overlay <grid> -o out.svg`: a grid (and a run's
+  routes) over its map image; `pokenav/maps/levels.py` reads walkable tiles
+  by level from a map image.
 
 ## Status
 
-Starting. See [docs/ROADMAP.md](docs/ROADMAP.md).
+The grid, leg planner, robust planner, physics model and simulator are
+ported from Arduino-Source; traces are recorded from every BDSP console run.
+See [docs/ROADMAP.md](docs/ROADMAP.md).
+
+Parts are ported from Arduino-Source (MIT); see [NOTICE](NOTICE).

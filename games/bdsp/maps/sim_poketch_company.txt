@@ -1,0 +1,33 @@
+// BDSP Jubilife City, the Poketch Company's corner: the simulator's hand-made local grid.
+// Map: Jubilife City
+// Ported from Arduino-Source (MIT), branch bdsp/grid-sim: PokemonBDSP_AutoStory_Sim.{h,cpp}.
+//
+// The local grid (x east, y south), hand-made from console facts
+// (2026-10-30) around the lamp L at the long road's west end:
+//   - "North by the lamp" stops at L (2,6), a row south of the hedge row 5.
+//   - The Poketch Company's sign is six tiles east of L, in the hedge row
+//    (8,5); it reads facing north from (8,6). Hedges run west of it.
+//   - The tile east of the sign (9,5) is a gap into the plaza.
+//   - The Company's front wall is about four rows north of the hedges (1);
+//    the plaza between (rows 2-4) is open.
+// Guessed: hedges east of the gap, the plaza's width, the long road (row 7)
+// and its east end, and the two buildings south of it with a one-tile
+// passage in the sign's column (for the alternative route).
+//
+// Named tiles: long road east end (24, 7), sign (8, 5), gap (9, 5).
+// The simulator's clown wanders in (9..11, 2..5).
+//
+//   0         1         2
+//   01234567890123456789012345
+##########################  // 0
+##########################  // 1  the Company's front wall
+###............###########  // 2  the plaza
+###............###########  // 3
+###............###########  // 4
+########S.################  // 5  hedges, the sign, the gap
+##.......................#  // 6  L = (2,6)
+##.......................#  // 7  the long road; the lamp (1,7)
+########.#################  // 8  two buildings, a passage
+########.#################  // 9
+########.#################  // 10
+##########################  // 11

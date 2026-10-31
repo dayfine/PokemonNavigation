@@ -2,7 +2,9 @@
 
 Each item is a parameter of the movement model. A value is either measured
 (with the measurement in `measurements/`) or a guess, and is marked so. Values
-below are what has been seen on the console so far.
+below are what has been seen on the console so far. The simulator's
+parameters are in `games/<game>/physics.txt` (BDSP: `games/bdsp/physics.txt`),
+and console runs are recorded as traces ([TRACES.md](TRACES.md)) to fit them.
 
 ## Inputs and distance
 
