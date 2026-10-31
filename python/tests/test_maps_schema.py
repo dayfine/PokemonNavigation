@@ -7,7 +7,7 @@ import unittest
 
 from pokenav.geometry import Direction, Tile
 from pokenav.maps import schema
-from pokenav.maps.model import OPEN, WALL, Behavior, Cell, MapGrid
+from pokenav.maps.model import OPEN, WALL, Behavior, Cell, GridMap2D
 from pokenav.maps.schema import MapFile, Npc, Wander
 
 from tests.paths import DOCS_EXAMPLES
@@ -93,7 +93,7 @@ class DumpTest(unittest.TestCase):
         self.assertEqual(schema.loads(schema.dumps(town, LEGEND)), town)
 
     def test_writes_only_what_is_set(self):
-        grid = MapGrid("plain", [[WALL, OPEN]])
+        grid = GridMap2D("plain", [[WALL, OPEN]])
         data = schema.to_json(MapFile(grid), LEGEND)
         self.assertEqual(data, {
             "format": schema.FORMAT,
@@ -103,7 +103,7 @@ class DumpTest(unittest.TestCase):
         })
 
     def test_cell_without_a_character(self):
-        grid = MapGrid("pond", [[Cell(blocked=True, behavior=Behavior.WATER)]])
+        grid = GridMap2D("pond", [[Cell(blocked=True, behavior=Behavior.WATER)]])
         with self.assertRaisesRegex(ValueError, "no legend character"):
             schema.dumps(MapFile(grid), LEGEND)
 
