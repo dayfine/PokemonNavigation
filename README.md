@@ -42,6 +42,10 @@ python3 -m unittest discover -s python/tests -t python          # all tests
 python3 -m unittest discover -s python/tests -t python -p 'test_package.py'  # one file
 ```
 
+Tests that read a real pokefirered checkout run only when
+`POKEFIRERED_DIR` points at one (`POKEFIRERED_DIR=~/pokefirered python3 -m
+unittest ...`); pret data is never committed.
+
 GitHub Actions runs the same command on Python 3.8 and 3.12 for every pull
 request (`.github/workflows/tests.yml`).
 
