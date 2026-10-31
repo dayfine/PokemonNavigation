@@ -8,7 +8,7 @@ import unittest
 
 from pokenav.geometry import Direction, Tile
 from pokenav.maps import schema, textgrid
-from pokenav.maps.model import OPEN, WALL, Behavior, Cell, MapGrid
+from pokenav.maps.model import OPEN, WALL, Behavior, Cell, GridMap2D
 from pokenav.maps.textgrid import STANDARD, Legend
 
 from tests.paths import DOCS_EXAMPLES
@@ -112,7 +112,7 @@ class WriteTest(unittest.TestCase):
         self.assertEqual(textgrid.write(textgrid.read(text)), text)
 
     def test_cell_without_a_character(self):
-        grid = MapGrid("odd", [[Cell(behavior=Behavior.DOOR)]])
+        grid = GridMap2D("odd", [[Cell(behavior=Behavior.DOOR)]])
         with self.assertRaises(KeyError):
             textgrid.write(schema.MapFile(grid))
 

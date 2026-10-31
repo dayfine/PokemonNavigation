@@ -21,7 +21,7 @@ so the tile past Route 1's (10, 0) is Viridian City's (22, height - 1):
 from typing import Dict, Iterable, NamedTuple, Optional
 
 from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior, Cell, MapGrid
+from pokenav.maps.model import Behavior, Cell, GridMap2D
 from pokenav.maps.schema import Connection, MapFile
 
 #   The way a player walks out of a door they arrive through. Gen 3 and BDSP
@@ -63,7 +63,7 @@ class World:
             raise ValueError("map %r is already in the world" % map_file.name)
         self.maps[map_file.name] = map_file
 
-    def grid(self, name: str) -> MapGrid:
+    def grid(self, name: str) -> GridMap2D:
         return self.maps[name].grid
 
     def at(self, place: Place) -> Optional[Cell]:
@@ -123,7 +123,7 @@ class World:
         return 0 <= along - connection.offset < length
 
 
-def _translate(tile: Tile, edge: Direction, grid: MapGrid, other: MapGrid, offset: int) -> Tile:
+def _translate(tile: Tile, edge: Direction, grid: GridMap2D, other: GridMap2D, offset: int) -> Tile:
     """`tile`, just past `edge` of `grid`, in the coordinates of `other`."""
     if edge is Direction.NORTH:
         return Tile(tile.x - offset, other.height + tile.y)

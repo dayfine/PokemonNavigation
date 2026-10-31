@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional
 
 from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior, Cell, MapGrid
+from pokenav.maps.model import Behavior, Cell, GridMap2D
 
 #   The value of "format" this module reads and writes.
 FORMAT = "pokenav-map/1"
@@ -143,7 +143,7 @@ class Note:
 class MapFile:
     """Everything a map file holds."""
 
-    grid: MapGrid
+    grid: GridMap2D
     game: str = ""
     points: List[NamedPoint] = field(default_factory=list)
     npcs: List[Npc] = field(default_factory=list)
@@ -236,14 +236,14 @@ def to_json(map_file: MapFile, legend: Legend) -> Dict[str, Any]:
 
 #   ---- cells ----
 
-def _grid_from_json(data: Dict[str, Any]) -> MapGrid:
+def _grid_from_json(data: Dict[str, Any]) -> GridMap2D:
     legend = {char: _legend_cell(char, spec) for char, spec in data["legend"].items()}
     rows: List[str] = data["rows"]
     elevation: List[str] = data.get("elevation") or ["0" * len(row) for row in rows]
     if len(elevation) != len(rows):
         raise ValueError("%d elevation rows for %d rows" % (len(elevation), len(rows)))
     cells = [_decode_row(y, row, levels, legend) for y, (row, levels) in enumerate(zip(rows, elevation))]
-    return MapGrid(data["name"], cells)
+    return GridMap2D(data["name"], cells)
 
 
 def _legend_cell(char: str, spec: Dict[str, Any]) -> Cell:
@@ -266,7 +266,7 @@ def _decode_row(y: int, row: str, levels: str, legend: Mapping[str, Cell]) -> Li
     return cells
 
 
-def _grid_to_json(grid: MapGrid, legend: Legend) -> Dict[str, Any]:
+def _grid_to_json(grid: GridMap2D, legend: Legend) -> Dict[str, Any]:
     chars = {cell: char for char, cell in legend.items()}
     rows = [_encode_row(y, row, chars) for y, row in enumerate(grid.rows())]
     used = sorted(set("".join(rows)), key=list(legend).index)
