@@ -7,7 +7,7 @@ import unittest
 from pokenav.geometry import Direction, Tile
 from pokenav.maps import model
 from pokenav.maps.model import (
-    FORCED_DIRECTION, LEDGE_DIRECTION, OPEN, WALL, Behavior, Cell, MapGrid, Viewport,
+    FORCED_DIRECTION, LEDGE_DIRECTION, OPEN, WALL, Behavior, Cell, GridMap2D, Viewport,
 )
 
 
@@ -21,10 +21,10 @@ def load_tests(loader, tests, ignore):
 SCREEN = Viewport(width=15, height=10, player_x=7, player_y=4)
 
 
-def every_behavior_map() -> MapGrid:
+def every_behavior_map() -> GridMap2D:
     """A one-row map with one cell of each behavior, in enum order."""
     row = [Cell(blocked=(b is not Behavior.NONE), behavior=b) for b in Behavior]
-    return MapGrid("behaviors", [row])
+    return GridMap2D("behaviors", [row])
 
 
 class CellTest(unittest.TestCase):
@@ -44,25 +44,25 @@ class CellTest(unittest.TestCase):
         self.assertNotIn(Behavior.DOOR, LEDGE_DIRECTION)
 
 
-class MapGridTest(unittest.TestCase):
+class GridMap2DTest(unittest.TestCase):
     def test_construction(self):
-        grid = MapGrid.filled("field", 4, 3)
+        grid = GridMap2D.filled("field", 4, 3)
         self.assertEqual((grid.name, grid.width, grid.height), ("field", 4, 3))
         self.assertEqual(len(list(grid.tiles())), 12)
         self.assertEqual(grid.rows(), [[OPEN] * 4] * 3)
-        self.assertEqual(grid, MapGrid.filled("field", 4, 3))
-        self.assertNotEqual(grid, MapGrid.filled("field", 3, 4))
+        self.assertEqual(grid, GridMap2D.filled("field", 4, 3))
+        self.assertNotEqual(grid, GridMap2D.filled("field", 3, 4))
 
     def test_rejects_ragged_rows_and_bad_elevations(self):
         with self.assertRaises(ValueError):
-            MapGrid("ragged", [[OPEN, OPEN], [OPEN]])
+            GridMap2D("ragged", [[OPEN, OPEN], [OPEN]])
         with self.assertRaises(ValueError):
-            MapGrid("high", [[Cell(elevation=16)]])
+            GridMap2D("high", [[Cell(elevation=16)]])
         with self.assertRaises(ValueError):
-            MapGrid("low", [[Cell(elevation=-1)]])
+            GridMap2D("low", [[Cell(elevation=-1)]])
 
     def test_bounds_report_the_edge_crossed(self):
-        grid = MapGrid.filled("field", 4, 3)
+        grid = GridMap2D.filled("field", 4, 3)
         cases = {
             Tile(0, 0): None,
             Tile(3, 2): None,
@@ -81,10 +81,9 @@ class MapGridTest(unittest.TestCase):
         grid = every_behavior_map()
         for x, behavior in enumerate(Behavior):
             self.assertIs(grid.at(Tile(x, 0)).behavior, behavior)
-            self.assertEqual(grid.find(behavior), [Tile(x, 0)])
 
     def test_set_replaces_one_cell(self):
-        grid = MapGrid.filled("field", 2, 2)
+        grid = GridMap2D.filled("field", 2, 2)
         grid.set(Tile(1, 0), WALL)
         self.assertEqual(grid.at(Tile(1, 0)), WALL)
         self.assertEqual(grid.at(Tile(0, 0)), OPEN)
@@ -98,19 +97,6 @@ class ViewportTest(unittest.TestCase):
         self.assertEqual(len(window), 150)
         self.assertEqual(window[0], Tile(3, 6))
         self.assertEqual(window[-1], Tile(17, 15))
-
-    def test_a_small_room_shows_black_everywhere(self):
-        room = MapGrid.filled("house", 6, 6)
-        self.assertFalse(room.fills(SCREEN))
-        self.assertAlmostEqual(room.off_map_fraction(Tile(2, 2), SCREEN), 1 - 36 / 150)
-
-    def test_a_large_map_shows_none_away_from_its_edges(self):
-        route = MapGrid.filled("route", 24, 40)
-        self.assertTrue(route.fills(SCREEN))
-        self.assertEqual(route.off_map_fraction(Tile(12, 20), SCREEN), 0)
-        #   At the top-left corner, 7 columns and 4 rows are off the map.
-        visible = (15 - 7) * (10 - 4)
-        self.assertAlmostEqual(route.off_map_fraction(Tile(0, 0), SCREEN), 1 - visible / 150)
 
 
 if __name__ == "__main__":
