@@ -26,8 +26,8 @@ Across maps, `world_step` does the same on a `World`: a step off an edge
 continues onto the connected map, an edge with no connection is a wall, and a
 warp puts the player at its arrival (`Warped`).
 
-    >>> from pokenav.maps.textgrid import read
-    >>> grid = read("#.#\\n#v#\\n#.#\\n").grid
+    >>> from pokenav.maps.textgrid import parse
+    >>> grid = parse("#.#\\n#v#\\n#.#\\n").grid
     >>> step(grid, PlayerState(Tile(1, 0)), Direction.SOUTH)
     Hop(state=PlayerState(tile=Tile(x=1, y=2), elevation=0))
     >>> step(grid, PlayerState(Tile(1, 2)), Direction.NORTH)
