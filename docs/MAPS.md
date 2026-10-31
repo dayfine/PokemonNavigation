@@ -118,3 +118,26 @@ Questions about the map file's NPCs, signs and points on a grid:
 around a place, counting connected maps as shown. A small room never fills
 the screen, so screen checks (battle detection, "stopped moving") must not
 assume a full-screen map. FRLG's viewport is `pokenav.games.frlg.VIEWPORT`.
+
+## FRLG import (`maps.pret`, `games.frlg`)
+
+pret data is not committed (pokefirered has no license file); the importer
+reads a local checkout. `maps.pret.Checkout(root, game)` reads
+`layouts.json`, each layout's `map.bin` (metatile, collision, elevation per
+tile), the tilesets' `metatile_attributes.bin` (behavior) and each map's
+`map.json` (connections, warps, objects, signs). The game-specific numbers
+(primary tileset size, behavior table, elevation rules, viewport) are in
+`pokenav/games/frlg.py`.
+
+```sh
+PYTHONPATH=python python3 -m pokenav.games.frlg ~/pokefirered Route1 PalletTown --out /tmp/frlg
+# wrote /tmp/frlg/Route1.json (24 x 40)
+# wrote /tmp/frlg/PalletTown.json (24 x 20)
+PYTHONPATH=python python3 -m pokenav.maps.textgrid show /tmp/frlg/Route1.json
+```
+
+Known simplifications: water always blocks; NPCs hidden by a flag are
+imported with the flag in their note; signs readable from any side are stored
+as read facing north; door mats (arrow warps) fire on the step onto them,
+while the game fires them on a press of their direction while standing on
+them.
