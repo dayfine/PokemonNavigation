@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 from pokenav.cli import textgrid as cli
-from pokenav.maps import schema, textgrid
+from pokenav.grid.maps import schema, textgrid
 
 from tests.paths import DOCS_EXAMPLES
 from tests.test_maps_textgrid import SMALL

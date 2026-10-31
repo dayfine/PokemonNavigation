@@ -1,13 +1,13 @@
-"""Tests for pokenav.movement: one rule per case, on small text maps."""
+"""Tests for pokenav.grid.movement: one rule per case, on small text maps."""
 
 import doctest
 import unittest
 
-from pokenav import movement
+from pokenav.grid import movement
 from pokenav.games import frlg
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.textgrid import parse
-from pokenav.movement import (
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.textgrid import parse
+from pokenav.grid.movement import (
     FLAT, Blocked, BlockReason, Edge, Hop, Moved, PlayerState, Warp, held_at, step, walk,
 )
 

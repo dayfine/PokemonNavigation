@@ -1,12 +1,12 @@
-"""Tests for pokenav.maps.model: cells, behaviors, a map's bounds and the
+"""Tests for pokenav.grid.maps.model: cells, behaviors, a map's bounds and the
 viewport."""
 
 import doctest
 import unittest
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps import model
-from pokenav.maps.model import (
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps import model
+from pokenav.grid.maps.model import (
     FORCED_DIRECTION, LEDGE_DIRECTION, OPEN, WALL, Behavior, Cell, GridMap2D, Viewport,
 )
 
