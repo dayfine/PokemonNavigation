@@ -136,7 +136,7 @@ tile), the tilesets' `metatile_attributes.bin` (behavior) and each map's
 PYTHONPATH=python python3 -m pokenav.cli.import_frlg ~/pokefirered Route1 PalletTown --out /tmp/frlg
 # wrote /tmp/frlg/Route1.json (24 x 40)
 # wrote /tmp/frlg/PalletTown.json (24 x 20)
-PYTHONPATH=python python3 -m pokenav.maps.textgrid show /tmp/frlg/Route1.json
+PYTHONPATH=python python3 -m pokenav.cli.textgrid show /tmp/frlg/Route1.json
 ```
 
 Known simplifications: water always blocks; NPCs hidden by a flag are
