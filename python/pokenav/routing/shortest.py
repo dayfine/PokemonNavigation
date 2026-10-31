@@ -116,7 +116,7 @@ def follow(world: World, start: WorldState, legs: List[Tuple[Direction, Place]],
     state, facing = start, None
     for direction, end in legs:
         while state.place != end:
-            move = _as_move(direction, world_step(world, state, direction, rules, objects))
+            move = as_move(direction, world_step(world, state, direction, rules, objects))
             if move is None or len(moves) >= max_presses:
                 raise ValueError("leg %s to %s is stopped at %s" % (direction.name.lower(), end, state.place))
             cost += move_cost(world, state, move, costs) + (costs.turn if facing not in (None, direction) else 0.0)
@@ -130,7 +130,7 @@ def _moves(world: World, node: _Node, costs: Costs, rules: ElevationRules, objec
     state, facing = node
     for direction in CLOCKWISE:
         result = world_step(world, state, direction, rules, objects)
-        move = _as_move(direction, result)
+        move = as_move(direction, result)
         if move is None:
             continue
         cost = move_cost(world, state, move, costs)
@@ -139,7 +139,8 @@ def _moves(world: World, node: _Node, costs: Costs, rules: ElevationRules, objec
         yield move, cost
 
 
-def _as_move(direction: Direction, result) -> Optional[Move]:
+def as_move(direction: Direction, result) -> Optional[Move]:
+    """The Move for a step result that moved the player, else None."""
     if isinstance(result, Moved):
         return Move(direction, MoveKind.STEP, result.state)
     if isinstance(result, Hop):
