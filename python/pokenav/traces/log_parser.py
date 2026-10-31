@@ -4,6 +4,11 @@ Reads the controller commands the app queued (`issue_left_joystick()`,
 `issue_buttons()`, ...) and the BDSP AutoStory walker's lines (`[Walk]`,
 `[Route]`, `[Event]`, ...) and turns them into one record per input or walk.
 See docs/TRACES.md for the record format.
+
+The walker lines are the ones Arduino-Source's BDSP AutoStory logs since
+commit dcc8778, which added `walk_until()` and `walk_route()`
+(`PokemonBDSP_AutoStory_Walk.cpp`, `PokemonBDSP_AutoStory_RouteWalk.cpp`):
+https://github.com/dayfine/Arduino-Source/commit/dcc877811742ed4c5ccd479841f79517c245640a
 """
 
 from __future__ import annotations
