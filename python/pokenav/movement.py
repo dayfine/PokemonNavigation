@@ -1,4 +1,6 @@
-"""Step rules: what one press of a direction does on one map.
+"""Step rules on a flat 2D tile map (`GridMap2D`): what one press of a
+direction does on one map. Maps with floors stacked in one grid (3D games)
+would need their own rules.
 
 `step` takes where the player stands (a tile and their current elevation) and
 a direction, and returns one of:
