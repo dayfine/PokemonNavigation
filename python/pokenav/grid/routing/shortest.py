@@ -21,10 +21,10 @@ import heapq
 import itertools
 from typing import AbstractSet, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
-from pokenav.geometry import CLOCKWISE, Direction
-from pokenav.maps.model import Behavior
-from pokenav.maps.world import Place, World
-from pokenav.movement import FLAT, ElevationRules, Hop, Moved, Warped, WorldState, world_step
+from pokenav.grid.geometry import CLOCKWISE, Direction
+from pokenav.grid.maps.model import Behavior
+from pokenav.grid.maps.world import Place, World
+from pokenav.grid.movement import FLAT, ElevationRules, Hop, Moved, Warped, WorldState, world_step
 
 
 class Costs(NamedTuple):

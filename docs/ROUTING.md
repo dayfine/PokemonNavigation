@@ -1,6 +1,6 @@
 # Routing
 
-How routes are planned over a world (`pokenav.routing`).
+How routes are planned over a world (`pokenav.grid.routing`).
 
 ## Shortest paths (`routing.shortest`)
 
