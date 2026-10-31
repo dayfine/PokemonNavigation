@@ -1,6 +1,6 @@
 # Movement rules
 
-What one press of a direction does on one map (`pokenav.movement`).
+What one press of a direction does on one map (`pokenav.grid.movement`).
 
 | Target tile | Result | Holds the player? |
 |---|---|---|

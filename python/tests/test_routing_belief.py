@@ -1,4 +1,4 @@
-"""Tests for pokenav.routing.belief: walls and ledges collapse beliefs, open
+"""Tests for pokenav.grid.routing.belief: walls and ledges collapse beliefs, open
 legs spread them, doors and edges are avoided, and robust plans on BDSP's
 story maps and (with POKEFIRERED_DIR) FRLG's Route 1."""
 
@@ -6,11 +6,11 @@ import os
 import unittest
 
 from pokenav.games import bdsp, frlg
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.textgrid import parse
-from pokenav.maps.world import Place, World
-from pokenav.movement import WorldState
-from pokenav.routing.belief import (
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.textgrid import parse
+from pokenav.grid.maps.world import Place, World
+from pokenav.grid.movement import WorldState
+from pokenav.grid.routing.belief import (
     BeliefCosts, BeliefPlanner, LegEnd, OpenLegError, describe, plan_belief,
 )
 
@@ -135,7 +135,7 @@ POKEFIRERED = os.environ.get("POKEFIRERED_DIR", "")
 @unittest.skipUnless(POKEFIRERED and os.path.isdir(POKEFIRERED), "set POKEFIRERED_DIR to a pokefirered checkout")
 class Route1LedgeTest(unittest.TestCase):
     def test_each_drop_ends_on_one_row(self):
-        from pokenav.maps.pret import Checkout
+        from pokenav.grid.maps.pret import Checkout
         world = Checkout(POKEFIRERED, frlg.PRET).load_world(["Route1"])
         planner = BeliefPlanner(world, rules=frlg.ELEVATION_RULES)
         #   Anywhere on rows 2 to 4 of the west side: each drop south pins the

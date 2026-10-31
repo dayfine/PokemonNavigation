@@ -1,4 +1,4 @@
-"""Tests for pokenav.routing.score: hand-built routes ranked as expected,
+"""Tests for pokenav.grid.routing.score: hand-built routes ranked as expected,
 margins, localizations, grass, the arrival checks, and (with
 POKEFIRERED_DIR) Route 1 against the hand-drawn line."""
 
@@ -8,17 +8,17 @@ import os
 import unittest
 
 from pokenav.games import frlg
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import LEDGE_DIRECTION, WALL
-from pokenav.maps.schema import Connection
-from pokenav.maps.textgrid import parse
-from pokenav.maps.world import Place, World
-from pokenav.movement import WorldState
-from pokenav.routing.belief import BeliefCosts, BeliefPlanner, LegEnd, OpenLegError
-from pokenav.routing.score import (
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.model import LEDGE_DIRECTION, WALL
+from pokenav.grid.maps.schema import Connection
+from pokenav.grid.maps.textgrid import parse
+from pokenav.grid.maps.world import Place, World
+from pokenav.grid.movement import WorldState
+from pokenav.grid.routing.belief import BeliefCosts, BeliefPlanner, LegEnd, OpenLegError
+from pokenav.grid.routing.score import (
     WEIGHTS, ScoreOptions, checks, legs_from_path, plan_ranked, propose, rank, replay, score,
 )
-from pokenav.routing.shortest import Costs, follow, shortest_path
+from pokenav.grid.routing.shortest import Costs, follow, shortest_path
 
 from tests.paths import GAMES
 
@@ -158,7 +158,7 @@ class Route1Test(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from pokenav.maps.pret import Checkout
+        from pokenav.grid.maps.pret import Checkout
         with open(ROUTE1_FIXTURE) as f:
             cls.fixture = json.load(f)
         cls.maps = [Checkout(POKEFIRERED, frlg.PRET).load_map(name) for name in cls.fixture["maps"]]

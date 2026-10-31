@@ -58,8 +58,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, FrozenSet, List, Mapping, Optional
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior, Cell, GridMap2D
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.model import Behavior, Cell, GridMap2D
 
 #   The value of "format" this module reads and writes.
 FORMAT = "pokenav-map/1"

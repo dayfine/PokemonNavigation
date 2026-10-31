@@ -7,10 +7,10 @@ import json
 import unittest
 
 from pokenav.games import bdsp
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior
-from pokenav.maps.world import Place
-from pokenav.movement import Moved, WorldState, world_step, world_walk
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.model import Behavior
+from pokenav.grid.maps.world import Place
+from pokenav.grid.movement import Moved, WorldState, world_step, world_walk
 
 
 def place(value) -> Place:
