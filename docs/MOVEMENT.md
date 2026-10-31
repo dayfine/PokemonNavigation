@@ -33,3 +33,11 @@ covered (a ledge hop counts 2) and what stopped it.
 Otherwise a step between different elevations is refused. With no rules
 (`FLAT`) every step stays on one elevation. FireRed / LeafGreen use 0 for
 transitions and 15 for multi-level tiles (`pokenav.games.frlg`).
+
+## Across maps
+
+`world_step` works on a `World`: a step off an edge continues onto the
+connected map (or is a wall if there is no connection), and a door or warp
+gives `Warped` with the arrival place and facing. A way out of the loaded
+maps stays `Edge` or `Warp`. `world_walk` holds a direction across maps and
+stops at a warp.

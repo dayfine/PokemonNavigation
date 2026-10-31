@@ -82,3 +82,18 @@ layer after `// Elevation:`. Convert and show from the command line:
 PYTHONPATH=python python3 -m pokenav.maps.textgrid show docs/examples/tiny_town.json
 PYTHONPATH=python python3 -m pokenav.maps.textgrid convert route.txt route.json
 ```
+
+## The world (`maps.world`)
+
+A `World` holds map files by name. A `Place` is `(map, tile)`.
+
+- **Connections**: a step off an edge with a connection lands on the other
+  map, shifted by the connection's offset (the other map's x, or y for east
+  and west, is this map's minus the offset). An edge with no connection is a
+  wall. A connection to a map that is not loaded leaves the known world
+  (`Edge`).
+- **Warps**: entering a warp tile lands on the warp it names (`to_map`,
+  `to_warp`). Arriving through a door, the player steps out of it, south.
+
+`movement.world_step` and `world_walk` apply the step rules across maps; a
+warp gives `Warped(state, facing)`.
