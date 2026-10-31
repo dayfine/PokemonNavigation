@@ -161,6 +161,17 @@ class BeliefPlanner:
                 return
             yield self._leg(direction, LegEnd.OPEN, ends, tiles)
 
+    def open_leg(self, belief: Belief, direction: Direction, tiles: int,
+                 extra_spread: int = 0) -> Optional[Tuple[PlannedLeg, float]]:
+        """One open leg of `tiles` tiles, with `extra_spread` more tiles of
+        error than the error model gives, or None if it is refused."""
+        spread = self.costs.error.spread(tiles) + extra_spread
+        walks = [self.walk(state, direction, limit=n)
+                 for state in belief for n in range(max(1, tiles - spread), tiles + spread + 1)]
+        if any(w.outcome in (ESCAPED, HOPPED) for w in walks):
+            return None
+        return self._leg(direction, LegEnd.OPEN, walks, tiles)
+
     def _open_ends(self, state: WorldState, direction: Direction) -> List[Optional[_Walk]]:
         """Where a hold of n tiles from `state` ends, for every n an open leg
         may need; None where it would hop a ledge or escape. Cached."""
