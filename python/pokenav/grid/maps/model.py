@@ -21,7 +21,7 @@ comes from: the text legend is `maps.textgrid`, the file format
 import enum
 from typing import Iterator, List, NamedTuple, Optional, Sequence
 
-from pokenav.geometry import Direction, Tile
+from pokenav.grid.geometry import Direction, Tile
 
 
 class Behavior(enum.Enum):

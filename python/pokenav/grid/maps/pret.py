@@ -25,10 +25,10 @@ import re
 import struct
 from typing import Dict, Iterable, List, Mapping, NamedTuple, Optional
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior, Cell, GridMap2D
-from pokenav.maps.schema import Connection, MapFile, Note, Npc, Sign, Wander, Warp
-from pokenav.maps.world import World
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.model import Behavior, Cell, GridMap2D
+from pokenav.grid.maps.schema import Connection, MapFile, Note, Npc, Sign, Wander, Warp
+from pokenav.grid.maps.world import World
 
 #   map.bin fields (include/global.fieldmap.h).
 METATILE_MASK = 0x03FF

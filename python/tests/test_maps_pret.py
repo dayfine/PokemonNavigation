@@ -1,4 +1,4 @@
-"""Tests for pokenav.maps.pret and the FRLG game data.
+"""Tests for pokenav.grid.maps.pret and the FRLG game data.
 
 Most tests build a tiny checkout in pret's file formats in a temporary
 directory. The tests at the end read a real pokefirered checkout when the
@@ -13,12 +13,12 @@ import tempfile
 import unittest
 
 from pokenav.games import frlg
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior, Cell
-from pokenav.maps.pret import Checkout, PretGame, tileset_dir
-from pokenav.maps.schema import Connection, Wander, Warp
-from pokenav.maps.world import Place
-from pokenav.movement import WorldState, world_walk
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.model import Behavior, Cell
+from pokenav.grid.maps.pret import Checkout, PretGame, tileset_dir
+from pokenav.grid.maps.schema import Connection, Wander, Warp
+from pokenav.grid.maps.world import Place
+from pokenav.grid.movement import WorldState, world_walk
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 

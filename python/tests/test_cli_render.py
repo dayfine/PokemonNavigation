@@ -7,8 +7,8 @@ import tempfile
 import unittest
 
 from pokenav.cli import render as cli
-from pokenav.geometry import Tile
-from pokenav.maps import render
+from pokenav.grid.geometry import Tile
+from pokenav.grid.maps import render
 from pokenav.png import Image
 
 from tests.paths import REPO
