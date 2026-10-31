@@ -37,6 +37,7 @@ named records for what is on the map:
 | Key | Holds |
 |---|---|
 | `format`, `name`, `game` | `"pokenav-map/1"`, the map's name, the game it is from |
+| `encounters` | where wild battles start: a list of `grass`, `water`, `cave` (every walkable tile); `[]` for none (towns, buildings, gyms); absent if unknown |
 | `legend` | character → `{"blocked": bool, "behavior": name}`; both optional |
 | `rows`, `elevation` | the cells, top row first; elevation defaults to 0 |
 | `points` | named tiles (`name`, `tile`, `proof`: how a walk proves it is there) |
