@@ -1,14 +1,14 @@
-"""Tests for pokenav.maps.schema: reading and writing JSON map files."""
+"""Tests for pokenav.grid.maps.schema: reading and writing JSON map files."""
 
 import json
 import os
 import tempfile
 import unittest
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps import schema
-from pokenav.maps.model import OPEN, WALL, Behavior, Cell, GridMap2D
-from pokenav.maps.schema import Encounter, MapFile, MapImage, Npc, Wander, wild_battle_possible
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps import schema
+from pokenav.grid.maps.model import OPEN, WALL, Behavior, Cell, GridMap2D
+from pokenav.grid.maps.schema import Encounter, MapFile, MapImage, Npc, Wander, wild_battle_possible
 
 from tests.paths import DOCS_EXAMPLES
 

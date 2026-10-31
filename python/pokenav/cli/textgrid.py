@@ -1,7 +1,7 @@
 """Show a map as a text grid, or convert between text grids and map files.
 
-The format and legend are in `pokenav.maps.textgrid`. A path ending in .json
-is a map file (`maps.schema`); any other path is a text grid.
+The format and legend are in `pokenav.grid.maps.textgrid`. A path ending in
+.json is a map file (`maps.schema`); any other path is a text grid.
 
 Run from the repository root with PYTHONPATH=python:
 
@@ -22,8 +22,8 @@ import argparse
 import sys
 from typing import List, Optional
 
-from pokenav.maps import schema, textgrid
-from pokenav.maps.schema import MapFile
+from pokenav.grid.maps import schema, textgrid
+from pokenav.grid.maps.schema import MapFile
 
 
 def load_any(path: str) -> MapFile:

@@ -1,17 +1,17 @@
-"""Tests for pokenav.routing.legs: the leg planner on a small made-up game
+"""Tests for pokenav.grid.routing.legs: the leg planner on a small made-up game
 with walls, people, grass, a one-way ledge and a warp, and on BDSP's
 Route 202."""
 
 import unittest
 
 from pokenav.games import bdsp
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.schema import Warp
-from pokenav.maps.textgrid import parse
-from pokenav.maps.world import Place, World
-from pokenav.movement import WorldState
-from pokenav.routing.legs import LegKind, describe, held, join_legs, plan_legs
-from pokenav.routing.shortest import shortest_path
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.schema import Warp
+from pokenav.grid.maps.textgrid import parse
+from pokenav.grid.maps.world import Place, World
+from pokenav.grid.movement import WorldState
+from pokenav.grid.routing.legs import LegKind, describe, held, join_legs, plan_legs
+from pokenav.grid.routing.shortest import shortest_path
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 

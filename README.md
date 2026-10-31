@@ -27,7 +27,7 @@ AutoStory programs.
 
 | Path | What |
 |---|---|
-| `python/pokenav/` | The library, Python 3.8+, standard library only: geometry, maps, movement, routing, and later physics, simulation and traces. Core modules know no game; game-specific code is in `pokenav/games/`. |
+| `python/pokenav/` | The library, Python 3.8+, standard library only. Navigation on flat 2D tile grids (geometry, maps, movement, routing) is in `pokenav/grid/`; later physics, simulation and traces sit next to it. Core modules know no game; game-specific code is in `pokenav/games/`. |
 | `python/tests/` | `unittest` tests, one file per module. |
 | `games/<game>/` | Per-game data: maps, named points, measured physics parameters. |
 | `measurements/` | Raw console measurements (what was pressed, what happened), so parameters can be refit. |

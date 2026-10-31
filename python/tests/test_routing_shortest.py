@@ -1,4 +1,4 @@
-"""Tests for pokenav.routing.shortest: optimal paths on small maps, ledges,
+"""Tests for pokenav.grid.routing.shortest: optimal paths on small maps, ledges,
 elevation, warps, unreachable goals, the grass weight, and Route 1 from a
 real pokefirered checkout when POKEFIRERED_DIR is set."""
 
@@ -7,12 +7,12 @@ import os
 import unittest
 
 from pokenav.games import frlg
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior
-from pokenav.maps.textgrid import parse
-from pokenav.maps.world import Place, World
-from pokenav.movement import WorldState
-from pokenav.routing.shortest import Costs, MoveKind, follow, shortest_path
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.model import Behavior
+from pokenav.grid.maps.textgrid import parse
+from pokenav.grid.maps.world import Place, World
+from pokenav.grid.movement import WorldState
+from pokenav.grid.routing.shortest import Costs, MoveKind, follow, shortest_path
 
 from tests.paths import GAMES
 from tests.test_maps_world import two_towns
@@ -135,7 +135,7 @@ class Route1Test(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from pokenav.maps.pret import Checkout
+        from pokenav.grid.maps.pret import Checkout
         with open(ROUTE1_FIXTURE) as f:
             cls.fixture = json.load(f)
         cls.world = Checkout(POKEFIRERED, frlg.PRET).load_world(cls.fixture["maps"])

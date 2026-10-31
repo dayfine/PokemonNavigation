@@ -1,6 +1,6 @@
 """Draw a route and regions over a map, as text or as a PNG.
 
-The drawing is `pokenav.maps.render`. `--path` takes waypoints x,y; each
+The drawing is `pokenav.grid.maps.render`. `--path` takes waypoints x,y; each
 consecutive pair is one straight leg. Each `--region` is a set of tiles (a
 belief set). With `--out` the result is a picture: the map's own image if
 `--image` is given (lined up by the map file's `image` entry), else flat
@@ -23,10 +23,10 @@ import argparse
 import sys
 from typing import List, Optional
 
-from pokenav.geometry import Tile
-from pokenav.maps import render, schema
-from pokenav.maps.render import Overlay, legs_through
-from pokenav.maps.schema import MapImage
+from pokenav.grid.geometry import Tile
+from pokenav.grid.maps import render, schema
+from pokenav.grid.maps.render import Overlay, legs_through
+from pokenav.grid.maps.schema import MapImage
 from pokenav.png import Image
 
 
