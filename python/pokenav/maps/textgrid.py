@@ -48,7 +48,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from pokenav.geometry import Direction, Tile
 from pokenav.maps import schema
-from pokenav.maps.model import OPEN, Behavior, Cell, MapGrid
+from pokenav.maps.model import OPEN, Behavior, Cell, GridMap2D
 from pokenav.maps.schema import MapFile, NamedPoint, Npc
 
 
@@ -157,7 +157,7 @@ def read(text: str, legend: Legend = STANDARD, name: str = "") -> MapFile:
         cells = _with_elevation(cells, elevation)
     points = [NamedPoint(m.group(1), Tile(int(m.group(2)), int(m.group(3))))
               for m in map(_POINT.match, lines) if m]
-    return MapFile(grid=MapGrid(name, cells), points=points, npcs=npcs)
+    return MapFile(grid=GridMap2D(name, cells), points=points, npcs=npcs)
 
 
 def _find_name(lines: Iterable[str]) -> str:
@@ -224,7 +224,7 @@ def write(map_file: MapFile, legend: Legend = STANDARD) -> str:
     return "\n".join(lines) + "\n"
 
 
-def show(grid: MapGrid, legend: Legend = STANDARD, marks: Optional[Mapping[Tile, str]] = None) -> str:
+def show(grid: GridMap2D, legend: Legend = STANDARD, marks: Optional[Mapping[Tile, str]] = None) -> str:
     """The grid as rows of characters, for printing and tests. Cells the
     legend has no character for are shown by their nearest kind, and
     `marks` (tile to character) are drawn over the cells."""
@@ -235,7 +235,7 @@ def show(grid: MapGrid, legend: Legend = STANDARD, marks: Optional[Mapping[Tile,
     return "\n".join("".join(row) for row in rows) + "\n"
 
 
-def _char_rows(grid: MapGrid, char_of) -> List[List[str]]:
+def _char_rows(grid: GridMap2D, char_of) -> List[List[str]]:
     return [[char_of(cell) for cell in row] for row in grid.rows()]
 
 
@@ -244,7 +244,7 @@ def _mark_npcs(rows: List[List[str]], npcs: Iterable[Npc], legend: Legend) -> No
         rows[npc.tile.y][npc.tile.x] = legend.npc_char(npc.facing)
 
 
-def _elevation_lines(grid: MapGrid) -> List[str]:
+def _elevation_lines(grid: GridMap2D) -> List[str]:
     levels = ["".join("%X" % cell.elevation for cell in row) for row in grid.rows()]
     if not any(level.strip("0") for level in levels):
         return []

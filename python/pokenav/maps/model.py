@@ -11,7 +11,7 @@ The model knows nothing about how a map is drawn as text or which game it
 comes from: the text legend is `maps.textgrid`, the file format
 `maps.schema`, and what each elevation means in a game is in `pokenav.games`.
 
-    >>> grid = MapGrid("room", [[Cell(), Cell(behavior=Behavior.TALL_GRASS)]])
+    >>> grid = GridMap2D("room", [[Cell(), Cell(behavior=Behavior.TALL_GRASS)]])
     >>> grid.at(Tile(1, 0)).behavior
     <Behavior.TALL_GRASS: 'tall_grass'>
     >>> grid.at(Tile(2, 0)) is None, grid.edge_crossed(Tile(2, 0))
@@ -111,8 +111,9 @@ class Viewport(NamedTuple):
                 yield Tile(x, y)
 
 
-class MapGrid:
-    """One map: a name, a width and height, and a cell per tile.
+class GridMap2D:
+    """One map, flat: a name, a width and height, and a cell per tile. Maps
+    with more than one floor in one grid (3D games) would need another model.
 
     Tiles outside the grid have no cell (`at` returns None); `edge_crossed`
     says which edge they lie past, since leaving a map is a move to another
@@ -128,7 +129,7 @@ class MapGrid:
         self._cells: List[Cell] = [cell for row in rows for cell in row]
 
     @classmethod
-    def filled(cls, name: str, width: int, height: int, cell: Cell = OPEN) -> "MapGrid":
+    def filled(cls, name: str, width: int, height: int, cell: Cell = OPEN) -> "GridMap2D":
         """A `width` x `height` map with every cell the same."""
         return cls(name, [[cell] * width for _ in range(height)])
 
@@ -171,29 +172,13 @@ class MapGrid:
         w = self.width
         return [self._cells[y * w:(y + 1) * w] for y in range(self.height)]
 
-    def find(self, behavior: Behavior) -> List[Tile]:
-        """The tiles with `behavior`, row by row."""
-        return [t for t in self.tiles() if self.at(t).behavior is behavior]
-
-    def fills(self, viewport: Viewport) -> bool:
-        """Whether the map is at least as large as the screen both ways. A map
-        that does not fill it (a small room) always shows black around it."""
-        return self.width >= viewport.width and self.height >= viewport.height
-
-    def off_map_fraction(self, center: Tile, viewport: Viewport) -> float:
-        """The share of the screen, 0 to 1, that shows no tile of this map
-        while the player stands on `center`. Ignores connected maps."""
-        window = list(viewport.window(center))
-        off = sum(1 for tile in window if not self.contains(tile))
-        return off / len(window)
-
     def __eq__(self, other) -> bool:
-        if not isinstance(other, MapGrid):
+        if not isinstance(other, GridMap2D):
             return NotImplemented
         return (self.name, self.width, self._cells) == (other.name, other.width, other._cells)
 
     def __repr__(self) -> str:
-        return "MapGrid(%r, %dx%d)" % (self.name, self.width, self.height)
+        return "GridMap2D(%r, %dx%d)" % (self.name, self.width, self.height)
 
 
 def _check_rows(name: str, rows: Sequence[Sequence[Cell]]) -> None:
