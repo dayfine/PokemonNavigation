@@ -15,6 +15,9 @@ foot.dpad.lateral     0      measured  BDSP runs 2026-10-31: D-pad legs along Ro
 foot.stick.per_tile   0.15   measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#1: a 160 ms hold moves 36 to 48 px, about ±0.15 tile; #3: about half a tile over 18 holds)
 foot.stick.overshoot  0      measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#1: each hold's stop is in its per-tile error)
 foot.stick.lateral    1      measured  BDSP runs 2026-10-31: a hold slid a row on the stairs onto a trainer's row, and caught tree corners along 1-wide sand rows (no movement for 70 s)
+# TODO: measure running. Twice walking's speed is assumed; the bike (also
+# guessed at 0.5) only pays for mounting if it beats running.
+foot.run.tile_cost    0.5    guessed   to measure: B held, stick from wall to wall on a long straight, against the same walk; planned for legs that end at a wall, where the speed does not matter
 
 # Turning and doors.
 turn_tap              1      measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#5: a tap toward a new direction only turns; it takes a tap's time, about a tile's)

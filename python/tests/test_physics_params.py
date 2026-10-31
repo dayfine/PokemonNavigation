@@ -47,6 +47,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNone(model.bike)
         self.assertIsNone(model.mode(Mode.BIKE))
         self.assertEqual(model.foot.stick, TileError(0.15, 0.0, 1.0))
+        self.assertIsNone(model.foot.run)
 
     def test_unknown_and_missing_names(self):
         with self.assertRaisesRegex(ValueError, "unknown.*foot.speed"):
@@ -68,7 +69,9 @@ class GameFilesTest(unittest.TestCase):
         self.assertEqual(model.foot.dpad.spread(22), 0)
         self.assertEqual(model.foot.stick.spread(20), 1)
         self.assertEqual((model.foot.dpad.lateral, model.foot.stick.lateral), (0, 1))
+        self.assertEqual(model.foot.run, 0.5)
         self.assertIsNotNone(model.bike)
+        self.assertIsNone(model.bike.run)
 
     def test_bdsp_measured_values_name_the_results(self):
         for name, param in params.load(bdsp.PHYSICS).items():
@@ -85,6 +88,7 @@ class GameFilesTest(unittest.TestCase):
             self.assertEqual(model.mode(mode).stick.spread(99), 0)
             self.assertEqual(model.mode(mode).stick.lateral, 0)
         self.assertLess(model.bike.tile_cost, model.foot.tile_cost)
+        self.assertLess(model.bike.tile_cost, model.foot.run)
         loaded = params.load(frlg.PHYSICS)
         self.assertEqual(loaded["bike.tile_cost"].status, "pret")
 

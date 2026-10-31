@@ -109,7 +109,7 @@ def replay(planner: BeliefPlanner, start: Iterable[WorldState], legs: Sequence[P
 
 def _walk_leg(planner: BeliefPlanner, belief: Belief, leg: PlannedLeg, extra: int) -> Optional[PlannedLeg]:
     if leg.end is LegEnd.WALL:
-        found = planner.wall_leg(belief, leg.direction, leg.mode)
+        found = planner.wall_leg(belief, leg.direction, leg.mode, leg.execution)
     elif leg.end is LegEnd.LEDGE:
         found = planner.ledge_leg(belief, leg.direction, leg.mode)
     elif leg.end is LegEnd.DOOR:

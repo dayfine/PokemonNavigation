@@ -21,6 +21,7 @@ class Execution(enum.Enum):
     """How a leg is walked."""
 
     CLIP = "clip"          #   stick held until stopped against a wall: exact on that axis
+    RUN = "run"            #   the same with B held: faster, for legs that end at a wall
     LEDGE = "ledge"        #   stick held until the first ledge hop lands: pins the landing row
     DPAD = "dpad"          #   N D-pad taps, each checked to have moved a tile
     STICK_HOLD = "stick"   #   a stick hold timed for N tiles: spreads by the error model

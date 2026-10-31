@@ -9,6 +9,7 @@ every mode. `ExecutionModel` holds one game's numbers, read from its
     model = from_params(params.load("games/bdsp/physics.txt"))
     model.foot.stick.spread(20)      # 1: a 20-tile stick hold may miss a tile
     model.foot.dpad.spread(20)       # 0: 20 D-pad taps land exactly
+    model.foot.run                   # 0.5: running takes half a walking tile's time
 """
 
 import enum
@@ -54,12 +55,14 @@ class TileError(NamedTuple):
 
 class ModeModel(NamedTuple):
     """One mode's numbers. `tile_cost` is the time of a tile against
-    walking's; `dpad` is None where taps are not used to count tiles. Any
+    walking's; `run` the same with B held, or None where the mode has no
+    running; `dpad` is None where taps are not used to count tiles. Any
     error with a `spread(tiles)` method will do."""
 
     tile_cost: float
     dpad: Optional[TileError]
     stick: TileError
+    run: Optional[float] = None
 
 
 class ExecutionModel(NamedTuple):
@@ -81,16 +84,18 @@ class ExecutionModel(NamedTuple):
         return self.foot if mode is Mode.FOOT else self.bike
 
 
-#   The parameter names `from_params` reads; `bike.*` are optional.
+#   The parameter names `from_params` reads; `bike.*` and `<mode>.run.tile_cost`
+#   are optional.
 MODE_NAMES = ("tile_cost", "dpad.per_tile", "dpad.overshoot", "dpad.lateral",
               "stick.per_tile", "stick.overshoot", "stick.lateral")
+RUN_NAME = "run.tile_cost"
 COST_NAMES = ("turn_tap", "mount", "door")
 
 
 def from_params(params: Params) -> ExecutionModel:
     """The model in a parameter file. Raises ValueError for an unknown or
     missing name."""
-    known = {"%s.%s" % (mode.value, name) for mode in Mode for name in MODE_NAMES} | set(COST_NAMES)
+    known = {"%s.%s" % (mode.value, name) for mode in Mode for name in MODE_NAMES + (RUN_NAME,)} | set(COST_NAMES)
     unknown = sorted(set(params) - known)
     if unknown:
         raise ValueError("unknown physics parameters: %s" % ", ".join(unknown))
@@ -103,10 +108,12 @@ def from_params(params: Params) -> ExecutionModel:
 
 def _mode_model(params: Params, mode: Mode) -> ModeModel:
     value = lambda name: _value(params, "%s.%s" % (mode.value, name))
+    run = "%s.%s" % (mode.value, RUN_NAME)
     return ModeModel(
         tile_cost=value("tile_cost"),
         dpad=TileError(value("dpad.per_tile"), value("dpad.overshoot"), value("dpad.lateral")),
         stick=TileError(value("stick.per_tile"), value("stick.overshoot"), value("stick.lateral")),
+        run=params[run].value if run in params else None,
     )
 
 

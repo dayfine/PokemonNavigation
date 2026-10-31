@@ -1,8 +1,8 @@
 """Tests for leg execution (pokenav.grid.routing.execution) in the robust
-planner and scoring: on BDSP, counted D-pad taps beat stick holds, an
-uncertain start is clipped to a wall before planning, stick legs are refused
-where they could drift into a corner, and the bike is ridden on long clips
-when the player has one."""
+planner and scoring: on BDSP, counted D-pad taps beat stick holds, a run to a
+wall beats both where the player can run, an uncertain start is clipped to a
+wall before planning, stick legs are refused where they could drift into a
+corner, and the bike is ridden on long clips when the player has one."""
 
 import unittest
 
@@ -58,6 +58,13 @@ def at(x, y, name=CITY):
     return WorldState(Place(name, Tile(x, y)))
 
 
+def no_run_costs():
+    """BDSP's costs without running, as before the Running Shoes."""
+    costs = bdsp.belief_costs()
+    model = costs.execution
+    return costs._replace(execution=model._replace(foot=model.foot._replace(run=None)))
+
+
 DOORSTEP = at(22, 2)
 BELOW_GYM_DOOR = at(2, 2)
 IN_GYM_DOOR = Place(CITY, GYM_DOOR)
@@ -87,13 +94,24 @@ def walk(planner, start, steps):
 
 class OreburghTest(unittest.TestCase):
     def setUp(self):
-        self.planner = BeliefPlanner(oreburgh(), bdsp.belief_costs())
+        #   Without running, as the 2026-10-31 runs were walked.
+        self.planner = BeliefPlanner(oreburgh(), no_run_costs())
+        self.running = BeliefPlanner(oreburgh(), bdsp.belief_costs())
 
     def test_exit_then_dpad_west_20_then_door(self):
         legs = self.planner.plan(at(2, 2, CENTER), IN_GYM_DOOR, facing=N)
         self.assertEqual(bot_legs(legs), [("door", "S"), ("dpad", "W", 20), ("door", "N")], text(legs))
         self.assertEqual(legs[0].after, {DOORSTEP})
         self.assertEqual([c.proof for c in checks([at(2, 2, CENTER)], legs)], ["door fade", "tap count", "door fade"])
+
+    def test_with_running_it_runs_to_the_cliff_and_taps_back(self):
+        #   Running is guessed at twice walking's speed: a run to the street's
+        #   west end and one tap back cost less than 20 taps.
+        legs = self.running.plan(at(2, 2, CENTER), IN_GYM_DOOR, facing=N)
+        self.assertEqual(bot_legs(legs), [("door", "S"), ("run", "W"), ("dpad", "E", 1), ("door", "N")], text(legs))
+        self.assertEqual([c.proof for c in checks([at(2, 2, CENTER)], legs)],
+                         ["door fade", "wall bump", "tap count", "door fade"])
+        self.assertEqual(score(self.running, [at(2, 2, CENTER)], legs, IN_GYM_DOOR).risk, 0)
 
     def test_stick_hold_alternative_scores_worse(self):
         dpad = walk(self.planner, [DOORSTEP], [(Execution.DPAD, W, 20), (Execution.DOOR, N)])
@@ -179,7 +197,7 @@ CORRIDOR = World([parse("""\
 
 class BikeTest(unittest.TestCase):
     def setUp(self):
-        self.planner = BeliefPlanner(CORRIDOR, bdsp.belief_costs())
+        self.planner = BeliefPlanner(CORRIDOR, no_run_costs())
         self.start = at(1, 1, "Corridor")
         #   Three tiles short of the east wall: a clip, then an exact offset.
         self.goal = Place("Corridor", Tile(45, 1))
@@ -195,6 +213,14 @@ class BikeTest(unittest.TestCase):
         #   bdsp.MAX_COUNTED_TILES taps.
         self.assertTrue(all(leg.mode is Mode.FOOT and leg.execution is Execution.DPAD for leg in legs), text(legs))
         self.assertEqual(sum(leg.tiles for leg in legs), 44)
+
+    def test_running_to_the_wall_beats_taps_and_the_guessed_bike(self):
+        #   With the bike guessed no faster than running, mounting does not
+        #   pay; the run ends at the wall, so its unmeasured speed is harmless.
+        running = BeliefPlanner(CORRIDOR, bdsp.belief_costs())
+        for bike in (False, True):
+            legs = running.plan(self.start, self.goal, bike=bike)
+            self.assertEqual(bot_legs(legs), [("run", "E"), ("dpad", "W", 3)], text(legs))
 
 
 if __name__ == "__main__":

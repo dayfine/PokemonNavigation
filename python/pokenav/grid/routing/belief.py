@@ -148,9 +148,6 @@ HELD, LIMIT, HOPPED, ESCAPED = "held", "limit", "hopped", "escaped"
 #   not meet (a ledge, a warp tile, a person, the unknown, a map edge).
 WALL_SIDE, OPEN_SIDE, HAZARD_SIDE = "wall", "open", "hazard"
 
-#   Kinds walked with the stick held, which may drift sideways.
-_HELD = frozenset({Execution.CLIP, Execution.LEDGE, Execution.STICK_HOLD})
-
 #   How each leg end is walked when it is not counted.
 _UNCOUNTED = {LegEnd.WALL: Execution.CLIP, LegEnd.LEDGE: Execution.LEDGE}
 
@@ -180,21 +177,28 @@ class BeliefPlanner:
         cost (not counting turn taps or getting on or off the bike)."""
         for mode in modes:
             counted = [kind for kind in (Execution.DPAD, Execution.STICK_HOLD) if self.error(kind, mode) is not None]
+            to_wall = [Execution.CLIP] + ([Execution.RUN] if self.model.mode(mode).run is not None else [])
             for direction in CLOCKWISE:
-                for leg in (self.wall_leg(belief, direction, mode), self.ledge_leg(belief, direction, mode),
-                            self.door_leg(belief, direction, mode)):
+                legs = [self.wall_leg(belief, direction, mode, kind) for kind in to_wall]
+                legs += [self.ledge_leg(belief, direction, mode), self.door_leg(belief, direction, mode)]
+                for leg in legs:
                     if leg is not None:
                         yield leg
                 for kind in counted:
                     yield from self.open_legs(belief, direction, kind, mode)
 
-    def wall_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
+    def wall_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT,
+                 kind: Execution = Execution.CLIP) -> Optional[Tuple[PlannedLeg, float]]:
+        """A hold until stopped against a wall, walked (CLIP) or run (RUN,
+        if the mode has running); None unless every state is held."""
         walks = [self.walk(state, direction) for state in belief]
         if any(w.outcome != HELD for w in walks) or max(w.tiles for w in walks) == 0:
             return None
         if not self._held_safely(belief, direction, walks, mode):
             return None
-        return self._leg(direction, LegEnd.WALL, walks, mode)
+        if kind is Execution.RUN and self.model.mode(mode).run is None:
+            return None
+        return self._leg(direction, LegEnd.WALL, walks, mode, kind)
 
     def ledge_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
         walks = [self.walk(state, direction, stop_on_hop=True) for state in belief]
@@ -319,10 +323,12 @@ class BeliefPlanner:
              spread: int = 0) -> Tuple[PlannedLeg, float]:
         """A leg and its cost. A counted leg pays `open_stop` when it is a
         timed hold (an interruption leaves the player at a guess) or may end
-        off its tile; checked taps that land exactly do not."""
+        off its tile; checked taps that land exactly do not. A run (B held)
+        pays the mode's running time a tile."""
         longest = max(w.tiles for w in walks)
         path = self.costs.path
-        tile_cost = path.tile * self.model.mode(mode).tile_cost
+        model = self.model.mode(mode)
+        tile_cost = path.tile * (model.run if kind is Execution.RUN else model.tile_cost)
         cost = self.costs.per_leg + tile_cost * longest + path.grass * max(w.grass for w in walks)
         if kind is Execution.STICK_HOLD or spread > 0:
             cost += self.costs.open_stop
@@ -389,7 +395,7 @@ class BeliefPlanner:
             raise TypeError("plan from one known state, not %r" % (start,))
         is_goal = goal if callable(goal) else (lambda state: state.place == goal)
         modes = [Mode.FOOT] + ([Mode.BIKE] if bike and self.model.bike is not None else [])
-        tile = self.costs.path.tile * min(self.model.mode(mode).tile_cost for mode in modes)
+        tile = self.costs.path.tile * min(_fastest(self.model.mode(mode)) for mode in modes)
         first = _Node(frozenset({start}), facing, Mode.FOOT)
         to_goal = self._tiles_to_goal(first.belief, is_goal)
         estimate = lambda node: tile * max(to_goal.get(s, float("inf")) for s in node.belief)
@@ -490,6 +496,11 @@ def plan_belief(world: World, start: WorldState, goal: Goal, costs: BeliefCosts 
                 facing: Optional[Direction] = None, bike: bool = False) -> Optional[List[PlannedLeg]]:
     """`BeliefPlanner(world, costs, rules, objects).plan(start, goal, facing, bike)`."""
     return BeliefPlanner(world, costs, rules, objects).plan(start, goal, facing, bike)
+
+
+def _fastest(model: ModeModel) -> float:
+    """The least a tile costs in `model`: running's, if it has running."""
+    return model.tile_cost if model.run is None else min(model.tile_cost, model.run)
 
 
 def _pressed_to(state: WorldState, result) -> Optional[WorldState]:
