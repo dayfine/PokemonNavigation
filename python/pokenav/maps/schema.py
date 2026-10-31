@@ -9,6 +9,7 @@ reads like a picture; everything else is a named record:
       "format": "pokenav-map/1",
       "name": "Tiny Town",
       "game": "example",
+      "encounters": [],
       "legend": {
         "#": {"blocked": true},
         ".": {},
@@ -34,6 +35,14 @@ cell's `blocked` (default false) and `behavior` (default "none"); its
 elevation comes from the elevation rows. The legend is the file's own, so a
 file can use any characters; `maps.textgrid` has the standard one.
 
+"encounters" says where wild battles can start, so a walker can tell a wild
+battle (run) from a trainer's (fight): a list of "grass" (on tall grass
+cells), "water" (on water, while surfing) and "cave" (on every walkable
+tile). An empty list is a map with none (a town, a building, a gym); a file
+without the key does not say. A map that lists encounters must list those of
+its cells: tall grass needs "grass" and water needs "water".
+`wild_battle_possible(map_file, tile)` applies it to one tile.
+
 The example above is docs/examples/tiny_town.json:
 
     town = load("docs/examples/tiny_town.json")
@@ -41,9 +50,10 @@ The example above is docs/examples/tiny_town.json:
     town.npcs[0].sight                  # 3
 """
 
+import enum
 import json
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, FrozenSet, List, Mapping, Optional
 
 from pokenav.geometry import Direction, Tile
 from pokenav.maps.model import Behavior, Cell, GridMap2D
@@ -53,6 +63,26 @@ FORMAT = "pokenav-map/1"
 
 #   Elevation rows use one hex digit per tile.
 _HEX_DIGITS = "0123456789ABCDEF"
+
+
+class Encounter(enum.Enum):
+    """A kind of ground where wild battles start. Values are the names used
+    in map files."""
+
+    #   On tall grass cells.
+    GRASS = "grass"
+    #   On water cells, while surfing.
+    WATER = "water"
+    #   On every walkable cell (caves, mines).
+    CAVE = "cave"
+
+
+#   The cell behavior each encounter kind needs on a map that lists its
+#   encounters: a map with such cells must list that kind.
+ENCOUNTER_BEHAVIOR = {
+    Encounter.GRASS: Behavior.TALL_GRASS,
+    Encounter.WATER: Behavior.WATER,
+}
 
 
 @dataclass
@@ -141,10 +171,12 @@ class Note:
 
 @dataclass
 class MapFile:
-    """Everything a map file holds."""
+    """Everything a map file holds. `encounters` is None when the file does
+    not say where wild battles start, and empty for a map with none."""
 
     grid: GridMap2D
     game: str = ""
+    encounters: Optional[FrozenSet[Encounter]] = None
     points: List[NamedPoint] = field(default_factory=list)
     npcs: List[Npc] = field(default_factory=list)
     signs: List[Sign] = field(default_factory=list)
@@ -163,6 +195,18 @@ class MapFile:
             if point.name == name:
                 return point
         raise KeyError("map %r has no point %r" % (self.name, name))
+
+
+def wild_battle_possible(map_file: MapFile, tile: Tile) -> Optional[bool]:
+    """Whether a wild battle can start with the player on `tile`: on a cave
+    map's walkable cells, or on a cell whose behavior is one of the map's
+    encounter kinds. None if the map does not say or `tile` is off it."""
+    cell = map_file.grid.at(tile)
+    if map_file.encounters is None or cell is None:
+        return None
+    if Encounter.CAVE in map_file.encounters and not cell.blocked:
+        return True
+    return any(ENCOUNTER_BEHAVIOR.get(kind) is cell.behavior for kind in map_file.encounters)
 
 
 #   A legend: each character and the cell kind (blocked, behavior) it stands
@@ -226,9 +270,11 @@ def from_json(data: Dict[str, Any]) -> MapFile:
     if data.get("format") != FORMAT:
         raise ValueError("format is %r, expected %r" % (data.get("format"), FORMAT))
     grid = _grid_from_json(data)
+    encounters = _encounters_from_json(data.get("encounters"), grid)
     return MapFile(
         grid=grid,
         game=data.get("game", ""),
+        encounters=encounters,
         points=[_point_from_json(p) for p in data.get("points", [])],
         npcs=[_npc_from_json(n) for n in data.get("npcs", [])],
         signs=[_sign_from_json(s) for s in data.get("signs", [])],
@@ -245,6 +291,8 @@ def to_json(map_file: MapFile, legend: Legend) -> Dict[str, Any]:
     data: Dict[str, Any] = {"format": FORMAT, "name": map_file.name}
     if map_file.game:
         data["game"] = map_file.game
+    if map_file.encounters is not None:
+        data["encounters"] = [kind.value for kind in Encounter if kind in map_file.encounters]
     data.update(_grid_to_json(map_file.grid, legend))
     records = {
         "points": [_point_to_json(p) for p in map_file.points],
@@ -257,6 +305,21 @@ def to_json(map_file: MapFile, legend: Legend) -> Dict[str, Any]:
     }
     data.update({key: value for key, value in records.items() if value})
     return data
+
+
+#   ---- encounters ----
+
+def _encounters_from_json(value: Optional[List[str]], grid: GridMap2D) -> Optional[FrozenSet[Encounter]]:
+    """The encounter kinds a file lists, checked against its cells."""
+    if value is None:
+        return None
+    kinds = frozenset(Encounter(name) for name in value)
+    present = {cell.behavior for row in grid.rows() for cell in row}
+    for kind, behavior in ENCOUNTER_BEHAVIOR.items():
+        if behavior in present and kind not in kinds:
+            raise ValueError("map has %s cells but encounters do not list %r"
+                             % (behavior.value, kind.value))
+    return kinds
 
 
 #   ---- cells ----
