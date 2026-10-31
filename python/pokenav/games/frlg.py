@@ -14,7 +14,7 @@ The command line that imports maps from a pokefirered checkout is
 from pokenav.grid.maps.model import Behavior, Viewport
 from pokenav.grid.maps.pret import Checkout, PretGame
 from pokenav.grid.movement import ElevationRules
-from pokenav.grid.routing.belief import OpenLegError
+from pokenav.physics.model import TileError
 
 #   A transition tile: steps onto or off it ignore elevation.
 TRANSITION_ELEVATION = 0
@@ -32,10 +32,9 @@ ELEVATION_RULES = ElevationRules(
 VIEWPORT = Viewport(width=15, height=10, player_x=7, player_y=4)
 
 #   FRLG moves whole tiles, 16 frames a step, so a walker that counts steps
-#   (taps, or a hold timed in steps) ends where it meant to. Open legs are
-#   taken as exact up to this many steps; a guess until measured.
-EXACT_OPEN_STEPS = 255
-OPEN_LEG_ERROR = OpenLegError(base=0, exact_up_to=EXACT_OPEN_STEPS)
+#   (taps, or a hold timed in steps) ends where it meant to: open legs are
+#   exact.
+OPEN_LEG_ERROR = TileError()
 
 #   The primary tileset holds metatiles 0 to 639 (NUM_METATILES_IN_PRIMARY
 #   in include/fieldmap.h); the secondary tileset's start after it.

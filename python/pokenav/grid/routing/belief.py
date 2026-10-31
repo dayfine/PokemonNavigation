@@ -10,16 +10,24 @@ chooses legs that keep it small:
 - a **ledge** leg (hold until the first ledge hop lands) sends every state
   to the landing row, so a ledge drop pins the row just as a wall does;
 - an **open** leg (hold for about n tiles) spreads it: each state may end
-  anywhere from n - k to n + k tiles on, with k from an `OpenLegError`.
+  anywhere from n - k to n + k tiles on, with k from the error model
+  (`physics.model.TileError`; measured on BDSP, a stick hold is off by about
+  0.15 tile a tile, so holds up to 11 tiles land exactly and a 14-tile hold
+  may miss by one).
 
-A leg that may run into a door, off the loaded maps, into a person or onto
-unknown ground is refused: the plan could not tell where the player went.
-The search is Dijkstra over beliefs, refusing any belief larger than
-`max_spread`. Each planned leg says what proves it ended where planned (a
-wall bump, a ledge landing, or nothing for an open leg) and the set of
-states it may leave the player in.
+A plan starts from one known tile: the bot clips to a wall or corner before
+it plans, and from there the position is known after every exact leg. The
+belief only grows at an open leg, and must be absorbed by what follows: a
+wall or ledge leg, or a goal region wider than the spread (a 14-tile hold
+into a 4-wide street). A leg that may run into a door, off the loaded maps,
+into a person or onto unknown ground is refused: the plan could not tell
+where the player went. The search is Dijkstra over beliefs, refusing any
+belief larger than `max_spread` (3 by default: the most spread measured).
+Each planned leg says what proves it ended where planned (a wall bump, a
+ledge landing, or nothing for an open leg) and the set of states it may
+leave the player in.
 
-    plan = plan_belief(world, {start}, goal=Place("Route 202", Tile(30, 19)))
+    plan = plan_belief(world, start, goal=Place("Route 202", Tile(30, 19)))
     for leg in plan:
         print(describe(leg))   # "east to wall (4 tiles) -> Route 202 (30, 22)"
 """
@@ -34,6 +42,7 @@ from pokenav.grid.maps.model import Behavior
 from pokenav.grid.maps.world import Place, World
 from pokenav.grid.movement import FLAT, HOLDING_REASONS, Blocked, ElevationRules, Hop, Moved, WorldState, world_step
 from pokenav.grid.routing.shortest import Costs
+from pokenav.physics.model import TileError
 
 Belief = FrozenSet[WorldState]
 
@@ -46,34 +55,29 @@ class LegEnd(enum.Enum):
     OPEN = "open"      #   held for a number of tiles: nothing proves it
 
 
-class OpenLegError(NamedTuple):
-    """How far an open leg of n tiles may end from n: `base` + n // `per`
-    tiles either way, or exactly n for legs of `exact_up_to` tiles or fewer.
-    The defaults allow one tile of error up to 4 tiles, two from 5 (on BDSP a
-    7-tile hold once went 9). A parameter until the physics model measures
-    it."""
+#   A stick hold's error as measured on BDSP (games/bdsp/MEASUREMENTS.md
+#   results 2026-10-31, #1 and #3): about 0.15 tile a tile, with no slide
+#   after letting go. The default until a game's parameter file gives its own.
+MEASURED_STICK = TileError(per_tile=0.15)
 
-    base: int = 1
-    per: int = 5
-    exact_up_to: int = 0
-
-    def spread(self, tiles: int) -> int:
-        if tiles <= self.exact_up_to:
-            return 0
-        return self.base + tiles // self.per
+#   The most states a belief may hold by default. On the 2026-10-31 BDSP runs
+#   no open leg spread further than a tile either way; a wider belief wants a
+#   wall leg first.
+MAX_SPREAD = 3
 
 
 class BeliefCosts(NamedTuple):
     """Leg costs for the robust planner. Each leg costs `per_leg` plus the
     path weights for its longest walk and its most grass, and `open_stop`
-    more if it ends in the open. `max_spread` is the most states a belief may
-    hold after a leg; `max_open_tiles` the longest open leg tried."""
+    more if it ends in the open. `error` is how far an open leg may miss;
+    `max_spread` is the most states a belief may hold after a leg;
+    `max_open_tiles` the longest open leg tried."""
 
     path: Costs = Costs()
     per_leg: float = 2.0
     open_stop: float = 8.0
-    error: OpenLegError = OpenLegError()
-    max_spread: int = 5
+    error: TileError = MEASURED_STICK
+    max_spread: int = MAX_SPREAD
     max_open_tiles: int = 12
 
 
@@ -234,16 +238,19 @@ class BeliefPlanner:
 
     #   ---- search ----
 
-    def plan(self, start: Iterable[WorldState], goal: Goal) -> Optional[List[PlannedLeg]]:
-        """The cheapest legs that take every state in `start` to states that
-        all meet `goal`, or None.
+    def plan(self, start: WorldState, goal: Goal) -> Optional[List[PlannedLeg]]:
+        """The cheapest legs from `start`, one known state, to states that
+        all meet `goal`, or None. Raises TypeError for a set of states: clip
+        to a wall first (`routing.localize` finds the legs), then plan.
 
         A* over beliefs. The estimate for a belief is the most tiles any of
         its states still has to walk to the goal, times the tile cost: every
         leg costs at least that weight per tile each state walks, so the
         estimate never overshoots."""
+        if not isinstance(start, WorldState):
+            raise TypeError("plan from one known state, not %r" % (start,))
         is_goal = goal if callable(goal) else (lambda state: state.place == goal)
-        first: Belief = frozenset(start)
+        first: Belief = frozenset({start})
         to_goal = self._tiles_to_goal(first, is_goal)
         estimate = lambda belief: self.costs.path.tile * max(to_goal.get(s, float("inf")) for s in belief)
         order = itertools.count()
@@ -319,7 +326,7 @@ def _distances_from(sources: List[WorldState], edges: Dict[WorldState, List[Tupl
     return distance
 
 
-def plan_belief(world: World, start: Iterable[WorldState], goal: Goal, costs: BeliefCosts = BeliefCosts(),
+def plan_belief(world: World, start: WorldState, goal: Goal, costs: BeliefCosts = BeliefCosts(),
                 rules: ElevationRules = FLAT, objects: AbstractSet[Place] = frozenset()) -> Optional[List[PlannedLeg]]:
     """`BeliefPlanner(world, costs, rules, objects).plan(start, goal)`."""
     return BeliefPlanner(world, costs, rules, objects).plan(start, goal)
