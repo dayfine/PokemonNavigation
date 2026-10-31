@@ -8,8 +8,9 @@ from pokenav.games import bdsp, frlg
 from pokenav.physics import params
 from pokenav.physics.model import Mode, TileError, from_params
 
-#   Where the BDSP values marked measured come from.
-BDSP_SOURCE = "games/bdsp/MEASUREMENTS.md results 2026-10-31"
+#   Where the BDSP values marked measured come from: the results table, or
+#   the console runs reported on #26.
+BDSP_SOURCES = ("games/bdsp/MEASUREMENTS.md results 2026-10-31", "BDSP runs 2026-10-31")
 
 #   A complete foot-only file.
 FOOT_ONLY = """\
@@ -19,6 +20,8 @@ foot.dpad.per_tile    0      measured  a record (#2)
 foot.dpad.overshoot   0      measured  a record
 foot.stick.per_tile   0.15   measured  a record
 foot.stick.overshoot  0      measured  a record
+foot.dpad.lateral     0      measured  a record
+foot.stick.lateral    1      measured  a record
 turn_tap              1      guessed   to measure: taps
 mount                 0      guessed   no bike
 door                  8      guessed   to measure: the fade
@@ -43,7 +46,7 @@ class ModelTest(unittest.TestCase):
         model = from_params(params.parse(FOOT_ONLY))
         self.assertIsNone(model.bike)
         self.assertIsNone(model.mode(Mode.BIKE))
-        self.assertEqual(model.foot.stick, TileError(0.15, 0.0))
+        self.assertEqual(model.foot.stick, TileError(0.15, 0.0, 1.0))
 
     def test_unknown_and_missing_names(self):
         with self.assertRaisesRegex(ValueError, "unknown.*foot.speed"):
@@ -64,12 +67,13 @@ class GameFilesTest(unittest.TestCase):
         model = bdsp.execution_model()
         self.assertEqual(model.foot.dpad.spread(22), 0)
         self.assertEqual(model.foot.stick.spread(20), 1)
+        self.assertEqual((model.foot.dpad.lateral, model.foot.stick.lateral), (0, 1))
         self.assertIsNotNone(model.bike)
 
     def test_bdsp_measured_values_name_the_results(self):
         for name, param in params.load(bdsp.PHYSICS).items():
             if param.status == "measured":
-                self.assertTrue(param.source.startswith(BDSP_SOURCE), name)
+                self.assertTrue(param.source.startswith(BDSP_SOURCES), name)
             if name.startswith("bike."):
                 self.assertEqual(param.status, "guessed", name)
                 self.assertIn("to measure", param.source, name)
@@ -79,6 +83,7 @@ class GameFilesTest(unittest.TestCase):
         for mode in Mode:
             self.assertEqual(model.mode(mode).dpad.spread(99), 0)
             self.assertEqual(model.mode(mode).stick.spread(99), 0)
+            self.assertEqual(model.mode(mode).stick.lateral, 0)
         self.assertLess(model.bike.tile_cost, model.foot.tile_cost)
         loaded = params.load(frlg.PHYSICS)
         self.assertEqual(loaded["bike.tile_cost"].status, "pret")

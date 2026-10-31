@@ -1,7 +1,8 @@
 """Tests for leg execution (pokenav.grid.routing.execution) in the robust
 planner and scoring: on BDSP, counted D-pad taps beat stick holds, an
-uncertain start is clipped to a wall before planning, and the bike is ridden
-on long clips when the player has one."""
+uncertain start is clipped to a wall before planning, stick legs are refused
+where they could drift into a corner, and the bike is ridden on long clips
+when the player has one."""
 
 import unittest
 
@@ -123,6 +124,49 @@ class OreburghTest(unittest.TestCase):
     def test_known_start_counts_instead_of_clipping(self):
         legs = self.planner.plan(DOORSTEP, IN_GYM_DOOR, facing=S)
         self.assertEqual(bot_legs(legs), [("dpad", "W", 20), ("door", "N")], text(legs))
+
+
+class DriftTest(unittest.TestCase):
+    """A stick hold drifts sideways (BDSP, Route 203), so it is allowed only
+    where what lies beside it is all wall or all open along the leg."""
+
+    def tiles(self, text, kind, start=(1, 2)):
+        """The lengths of the legs of `kind` east from `start` on map `text`:
+        0 for a clip that is allowed (its length is not counted)."""
+        planner = BeliefPlanner(World([parse(text, name="M")]), bdsp.belief_costs())
+        belief = frozenset({at(start[0], start[1], "M")})
+        if kind is Execution.CLIP:
+            return [] if planner.wall_leg(belief, E) is None else [0]
+        return [leg.tiles for leg, _ in planner.open_legs(belief, E, kind)]
+
+    #   The row is 8 tiles long; holds longer than that end at its east wall.
+    EIGHT = list(range(1, 9))
+
+    def test_a_straight_corridor_may_be_held_along(self):
+        corridor = "##########\n##########\n#........#\n##########\n"
+        self.assertEqual(self.tiles(corridor, Execution.STICK_HOLD)[:8], self.EIGHT)
+        self.assertEqual(self.tiles(corridor, Execution.CLIP), [0])
+
+    def test_a_ragged_tree_line_takes_the_dpad(self):
+        #   Trees above the row with gaps: a hold east catches their corners.
+        ragged = "##########\n#..##..###\n#........#\n##########\n"
+        #   Only the one-tile hold stays beside open ground the whole way.
+        self.assertEqual(self.tiles(ragged, Execution.STICK_HOLD), [1])
+        self.assertEqual(self.tiles(ragged, Execution.CLIP), [])
+        self.assertEqual(self.tiles(ragged, Execution.DPAD)[:8], self.EIGHT)
+
+    def test_a_ledge_beside_the_row_is_a_hazard(self):
+        #   Ledges below the row, crossed south: a drift would hop them. (A
+        #   ledge above, met from below, is a wall.)
+        ledges = "##########\n##########\n#........#\n#vvvvvvvv#\n#........#\n##########\n"
+        self.assertEqual(self.tiles(ledges, Execution.STICK_HOLD), [])
+        self.assertEqual(self.tiles(ledges, Execution.CLIP), [])
+        self.assertEqual(self.tiles(ledges, Execution.DPAD)[:8], self.EIGHT)
+
+    def test_a_wide_street_may_be_held_along(self):
+        #   Open ground on both sides the whole way, as on Jubilife's street.
+        street = "##########\n#........#\n#........#\n#........#\n##########\n"
+        self.assertEqual(self.tiles(street, Execution.STICK_HOLD)[:8], self.EIGHT)
 
 
 #   A long corridor: walls at x = 0 and x = 49.

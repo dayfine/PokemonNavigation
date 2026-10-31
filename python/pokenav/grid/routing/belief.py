@@ -83,7 +83,8 @@ class BeliefCosts(NamedTuple):
     `max_spread` is the most states a belief may hold after a leg;
     `max_open_tiles` the longest open leg tried. `execution` is the game's
     model of walking (see `physics.model`); without one the planner walks on
-    foot with stick holds whose error is `error`."""
+    foot with stick holds whose error is `error` (which, by default, says
+    nothing about sideways drift)."""
 
     path: Costs = Costs()
     per_leg: float = 2.0
@@ -141,6 +142,15 @@ class _Walk(NamedTuple):
 #   Why a walk stopped.
 HELD, LIMIT, HOPPED, ESCAPED = "held", "limit", "hopped", "escaped"
 
+#   What lies beside a tile of a held walk: a wall the drift presses against
+#   (a building's front with its door counts: the door opens only to a step
+#   into it), open ground of the same corridor, or something the drift must
+#   not meet (a ledge, a warp tile, a person, the unknown, a map edge).
+WALL_SIDE, OPEN_SIDE, HAZARD_SIDE = "wall", "open", "hazard"
+
+#   Kinds walked with the stick held, which may drift sideways.
+_HELD = frozenset({Execution.CLIP, Execution.LEDGE, Execution.STICK_HOLD})
+
 #   How each leg end is walked when it is not counted.
 _UNCOUNTED = {LegEnd.WALL: Execution.CLIP, LegEnd.LEDGE: Execution.LEDGE}
 
@@ -156,6 +166,7 @@ class BeliefPlanner:
         self.objects = objects
         self._trajectories: Dict[Tuple[WorldState, Direction], Tuple[List[_Walk], str]] = {}
         self._open_tables: Dict[Tuple[WorldState, Direction], List[Optional[_Walk]]] = {}
+        self._flanks: Dict[Tuple[WorldState, Direction], List[Tuple[str, str]]] = {}
         self.model = costs.execution or ExecutionModel(foot=ModeModel(tile_cost=1.0, dpad=None, stick=costs.error))
         self._longest = costs.max_open_tiles + max(error.spread(costs.max_open_tiles) for error in self._errors())
         #   Brings a belief larger than max_spread back to one state, as legs
@@ -181,11 +192,15 @@ class BeliefPlanner:
         walks = [self.walk(state, direction) for state in belief]
         if any(w.outcome != HELD for w in walks) or max(w.tiles for w in walks) == 0:
             return None
+        if not self._held_safely(belief, direction, walks, mode):
+            return None
         return self._leg(direction, LegEnd.WALL, walks, mode)
 
     def ledge_leg(self, belief: Belief, direction: Direction, mode: Mode = Mode.FOOT) -> Optional[Tuple[PlannedLeg, float]]:
         walks = [self.walk(state, direction, stop_on_hop=True) for state in belief]
         if any(w.outcome != HOPPED for w in walks):
+            return None
+        if not self._held_safely(belief, direction, walks, mode):
             return None
         return self._leg(direction, LegEnd.LEDGE, walks, mode)
 
@@ -219,6 +234,8 @@ class BeliefPlanner:
             ends = [table[n] for table in tables for n in range(max(1, tiles - spread), tiles + spread + 1)]
             if any(end is None for end in ends):
                 return
+            if error.lateral > 0 and not self.drifts_safely(belief, direction, tiles + spread):
+                return
             yield self._leg(direction, LegEnd.OPEN, ends, mode, kind, tiles, spread)
 
     def open_leg(self, belief: Belief, direction: Direction, tiles: int, extra_spread: int = 0,
@@ -226,12 +243,62 @@ class BeliefPlanner:
         """One open leg of `tiles` tiles walked as `kind`, with `extra_spread`
         more tiles of error than the error model gives, or None if it is
         refused."""
-        spread = self.error(kind, mode).spread(tiles) + extra_spread
+        error = self.error(kind, mode)
+        spread = error.spread(tiles) + extra_spread
         walks = [self.walk(state, direction, limit=n)
                  for state in belief for n in range(max(1, tiles - spread), tiles + spread + 1)]
         if any(w.outcome in (ESCAPED, HOPPED) for w in walks):
             return None
+        if error.lateral > 0 and not self.drifts_safely(belief, direction, tiles + spread):
+            return None
         return self._leg(direction, LegEnd.OPEN, walks, mode, kind, tiles, spread)
+
+    #   ---- sideways drift ----
+
+    def _held_safely(self, belief: Belief, direction: Direction, walks: List[_Walk], mode: Mode) -> bool:
+        """Whether a leg held with the stick (a clip or a ledge leg) from
+        `belief` is safe from drifting sideways, by the mode's stick error."""
+        if self.model.mode(mode).stick.lateral <= 0:
+            return True
+        return self.drifts_safely(belief, direction, max(w.tiles for w in walks))
+
+    def drifts_safely(self, belief: Belief, direction: Direction, tiles: int) -> bool:
+        """Whether a stick hold of up to `tiles` tiles from every state of
+        `belief` keeps its row: on each side, what lies beside the tiles it
+        passes is all wall (the drift presses against it) or all open ground
+        (the same corridor). A side that changes from wall to open has
+        corners the drift catches on, and a ledge, warp tile, person, map
+        edge or unknown tile beside the walk must not be drifted into."""
+        for state in belief:
+            flanks = self.flanks(state, direction)[:tiles + 1]
+            for side in (0, 1):
+                kinds = {flank[side] for flank in flanks}
+                if kinds not in ({WALL_SIDE}, {OPEN_SIDE}):
+                    return False
+        return True
+
+    def flanks(self, state: WorldState, direction: Direction) -> List[Tuple[str, str]]:
+        """What lies to the left and right of each tile of the held walk from
+        `state` (the start tile first): WALL_SIDE, OPEN_SIDE or HAZARD_SIDE.
+        Cached."""
+        key = (state, direction)
+        if key not in self._flanks:
+            stops, _ = self._trajectory(state, direction)
+            sides = (direction.turn(clockwise=False), direction.turn(clockwise=True))
+            self._flanks[key] = [tuple(self._side(stop.end, side) for side in sides) for stop in stops]
+        return self._flanks[key]
+
+    def _side(self, state: WorldState, side: Direction) -> str:
+        result = world_step(self.world, state, side, self.rules, self.objects)
+        if isinstance(result, Blocked) and result.reason in HOLDING_REASONS:
+            return WALL_SIDE
+        if isinstance(result, Moved):
+            return OPEN_SIDE
+        if isinstance(result, (Warp, Warped)):
+            beside = Place(state.place.map, state.place.tile.step(side))
+            if self.world.at(beside).behavior is Behavior.DOOR:
+                return WALL_SIDE
+        return HAZARD_SIDE
 
     def _errors(self):
         """Every counted-leg error model the game has."""

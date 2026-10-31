@@ -11,7 +11,7 @@ game's `games/<game>/physics.txt` (`pokenav.physics`).
 | `clip` | the stick, until the player stops against a wall | exactly at the wall | collapses on that axis, from any start along it |
 | `ledge` | the stick, until the first ledge hop lands | on the landing row | collapses on that axis |
 | `dpad` | N D-pad taps, checking that each moved a tile | N tiles on, within the error model | BDSP and FRLG on foot: exact, so it does not spread |
-| `stick` | the stick for the time of N tiles | N tiles on, ± the error model | spreads by the error model |
+| `stick` | the stick for the time of N tiles | N tiles on, ± the error model; may drift a row sideways | spreads by the error model |
 | `door` | a turn tap if needed, then a hold into the door ahead | through the door; the fade proves it | the warp's arrival |
 
 A first tap toward a new direction only turns the player, so a `dpad` or
@@ -41,9 +41,22 @@ by about ±0.15 tile per tile, and 18 holds came to about half a tile.
 
 | Game, mode | `dpad` | `stick` | Tile cost | Source |
 |---|---|---|---|---|
-| BDSP, foot | exact | 0.15 per tile: exact to 11 tiles, ±1 from 12 | 1 | measured, games/bdsp/MEASUREMENTS.md results 2026-10-31 |
-| BDSP, bike | 0.3 per tile + 0.5 | 0.3 per tile + 1 overshoot | 0.5 | guessed, to measure (below) |
+| BDSP, foot | exact | 0.15 per tile: exact to 11 tiles, ±1 from 12; drifts a row | 1 | measured, games/bdsp/MEASUREMENTS.md results 2026-10-31 and the Route 203 runs the same day |
+| BDSP, bike | 0.3 per tile + 0.5 | 0.3 per tile + 1 overshoot; drifts a row | 0.5 | guessed, to measure (below) |
 | FRLG, foot and bike | exact | exact | 1; bike 0.375 (6 frames a tile, not 16) | pret |
+
+A held stick also drifts **sideways** (`lateral`, in rows): on BDSP's Route
+203 a hold along a 1-wide sand row caught the tree line's corners and stood
+still for 70 s, and a hold up the stairs slid onto a trainer's row, where
+D-pad legs over the same tiles stayed on their row. So a leg held with the
+stick (`stick`, and `clip` and `ledge` too) is allowed only where, on each
+side, what lies beside the tiles it passes is all wall (the drift presses
+against it; a building's front with its door counts as wall) or all open
+ground (the same corridor). A side that changes from wall to open has corners;
+a ledge, warp tile, person, map edge or unknown tile beside the walk could be
+drifted into. Along a ragged tree line the planner takes the D-pad. Stairs are
+not in the map model yet; when they are, stick legs over them are to be
+refused the same way.
 
 ## When the planner picks each
 
@@ -60,9 +73,11 @@ or run into a door, edge or person on the way, are refused. So:
   finds the legs: a clip brings a belief three tiles wide to one tile), then
   plans. Taps counted from a belief three tiles wide would end three tiles
   wide and miss a one-tile door.
-- **`stick`**: only where its error is harmless (short legs, or a clip or
-  ledge after it that collapses the spread), and on FRLG where it is exact. A
-  20-tile stick hold on BDSP may end a tile off and is refused before a door.
+- **`stick`**: only where its error is harmless (short legs, a goal region
+  wider than the spread, or a clip or ledge after it that collapses the
+  spread), where it cannot drift into a corner (see the error model), and on
+  FRLG where it is exact. A 20-tile stick hold on BDSP may end a tile off and
+  is refused before a door.
 - **`door`**: to end at a door, or to pass into another loaded map.
 - **Bike** (only with `bike=True` and a game model that has one): for long
   clips, where the bike's speed pays for getting on. Exact offsets stay on
@@ -94,5 +109,6 @@ bike.tile_cost        0.5    guessed   to measure: hold time from wall to wall, 
 ```
 
 Names: `<mode>.tile_cost`, `<mode>.dpad.per_tile`, `<mode>.dpad.overshoot`,
-`<mode>.stick.per_tile` and `<mode>.stick.overshoot` for `foot` and
-(optionally) `bike`; `turn_tap`, `mount` and `door`.
+`<mode>.dpad.lateral`, `<mode>.stick.per_tile`, `<mode>.stick.overshoot` and
+`<mode>.stick.lateral` for `foot` and (optionally) `bike`; `turn_tap`,
+`mount` and `door`.

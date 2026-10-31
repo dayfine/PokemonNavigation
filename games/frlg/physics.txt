@@ -10,6 +10,8 @@ foot.dpad.per_tile    0      pret      grid-locked steps (src/event_object_movem
 foot.dpad.overshoot   0      pret      grid-locked steps: a step always finishes its tile
 foot.stick.per_tile   0      pret      the stick reads as the D-pad; grid-locked steps
 foot.stick.overshoot  0      pret      grid-locked steps: a step always finishes its tile
+foot.dpad.lateral     0      pret      grid-locked steps: the player cannot leave the row
+foot.stick.lateral    0      pret      grid-locked steps: the player cannot leave the row
 turn_tap              0.5    pret      src/field_player_avatar.c PlayerTurnInPlace: walk in place fast, 8 frames
 # TODO: tune the door cost: heuristic until the door's frames are measured.
 door                  4      guessed   to measure: frames from the step into a door to control on the other side
@@ -18,5 +20,7 @@ bike.dpad.per_tile    0      pret      grid-locked steps on the bike too
 bike.dpad.overshoot   0      pret      grid-locked steps on the bike too
 bike.stick.per_tile   0      pret      grid-locked steps on the bike too
 bike.stick.overshoot  0      pret      grid-locked steps on the bike too
+bike.dpad.lateral     0      pret      grid-locked steps on the bike too
+bike.stick.lateral    0      pret      grid-locked steps on the bike too
 # TODO: tune the mount cost: heuristic until the Bicycle's frames are measured.
 mount                 2      guessed   to measure: frames from the registered Bicycle to riding, and back

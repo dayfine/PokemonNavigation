@@ -34,10 +34,17 @@ class TileError(NamedTuple):
     sqrt(n) + `overshoot` tiles either way. Per-step errors add up like a
     random walk (BDSP: 0.15 a step came to about half a tile over 18 steps),
     hence the square root; `overshoot` is a fixed slide after letting go.
-    `spread` rounds to whole tiles."""
+    `spread` rounds to whole tiles.
+
+    `lateral` is how many rows the leg may drift sideways: 0 keeps its row
+    (D-pad taps; FRLG's grid-locked steps), 1 means a stick hold can slide
+    into the next row and catch on a corner there (BDSP, Route 203's sand
+    rows and stairs). The planner allows such a leg only where the rows
+    beside it are all wall or all open along its length."""
 
     per_tile: float = 0.0
     overshoot: float = 0.0
+    lateral: float = 0.0
 
     def spread(self, tiles: int) -> int:
         """The tiles a leg of `tiles` tiles may end either side of its end."""
@@ -75,7 +82,8 @@ class ExecutionModel(NamedTuple):
 
 
 #   The parameter names `from_params` reads; `bike.*` are optional.
-MODE_NAMES = ("tile_cost", "dpad.per_tile", "dpad.overshoot", "stick.per_tile", "stick.overshoot")
+MODE_NAMES = ("tile_cost", "dpad.per_tile", "dpad.overshoot", "dpad.lateral",
+              "stick.per_tile", "stick.overshoot", "stick.lateral")
 COST_NAMES = ("turn_tap", "mount", "door")
 
 
@@ -97,8 +105,8 @@ def _mode_model(params: Params, mode: Mode) -> ModeModel:
     value = lambda name: _value(params, "%s.%s" % (mode.value, name))
     return ModeModel(
         tile_cost=value("tile_cost"),
-        dpad=TileError(value("dpad.per_tile"), value("dpad.overshoot")),
-        stick=TileError(value("stick.per_tile"), value("stick.overshoot")),
+        dpad=TileError(value("dpad.per_tile"), value("dpad.overshoot"), value("dpad.lateral")),
+        stick=TileError(value("stick.per_tile"), value("stick.overshoot"), value("stick.lateral")),
     )
 
 
