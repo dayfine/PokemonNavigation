@@ -11,10 +11,12 @@ foot.dpad.overshoot   0      pret      grid-locked steps: a step always finishes
 foot.stick.per_tile   0      pret      the stick reads as the D-pad; grid-locked steps
 foot.stick.overshoot  0      pret      grid-locked steps: a step always finishes its tile
 turn_tap              0.5    pret      src/field_player_avatar.c PlayerTurnInPlace: walk in place fast, 8 frames
+# TODO: tune the door cost: heuristic until the door's frames are measured.
 door                  4      guessed   to measure: frames from the step into a door to control on the other side
 bike.tile_cost        0.375  pret      src/bike.c rides with PlayerRideWaterCurrent: MOVE_SPEED_FAST_2, 6 frames a tile (src/event_object_movement.c sSpeedFast2StepFuncs)
 bike.dpad.per_tile    0      pret      grid-locked steps on the bike too
 bike.dpad.overshoot   0      pret      grid-locked steps on the bike too
 bike.stick.per_tile   0      pret      grid-locked steps on the bike too
 bike.stick.overshoot  0      pret      grid-locked steps on the bike too
+# TODO: tune the mount cost: heuristic until the Bicycle's frames are measured.
 mount                 2      guessed   to measure: frames from the registered Bicycle to riding, and back

@@ -61,6 +61,10 @@ class ExecutionModel(NamedTuple):
     are in tiles walked: `turn_tap` for a tap that only turns the player,
     `mount` to get on or off the bike, `door` to wait out a door's fade."""
 
+    #   TODO: tune `door` and `mount`. The game files' values are heuristics:
+    #   BDSP's door until ms per walking tile converts its measured fade to
+    #   tiles, FRLG's door and mount until their frames are measured.
+
     foot: ModeModel
     bike: Optional[ModeModel] = None
     turn_tap: float = 0.0

@@ -14,6 +14,8 @@ foot.stick.overshoot  0      measured  games/bdsp/MEASUREMENTS.md results 2026-1
 
 # Turning and doors.
 turn_tap              1      measured  games/bdsp/MEASUREMENTS.md results 2026-10-31 (#5: a tap toward a new direction only turns; it takes a tap's time, about a tile's)
+# TODO: tune the door cost: once ms per walking tile is measured, convert
+# the fade (#6) to tiles instead of this heuristic.
 door                  8      guessed   games/bdsp/MEASUREMENTS.md results 2026-10-31 (#6: black for 1 to 1.5 s, 2 s after the step); to measure: ms per walking tile, to turn the fade into tiles
 
 # On the bike (from Eterna City; nothing measured yet). Planned measurements:
