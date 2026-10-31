@@ -26,7 +26,7 @@ import struct
 from typing import Dict, Iterable, List, Mapping, NamedTuple, Optional
 
 from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior, Cell, MapGrid
+from pokenav.maps.model import Behavior, Cell, GridMap2D
 from pokenav.maps.schema import Connection, MapFile, Note, Npc, Sign, Wander, Warp
 from pokenav.maps.world import World
 
@@ -105,7 +105,7 @@ class Checkout:
     def load_map(self, name: str) -> MapFile:
         """The map file for map `name`, as in data/maps/<name>/map.json."""
         header = self._read_json("data", "maps", name, "map.json")
-        grid = MapGrid(name, self._cells(self._layout(header["layout"])))
+        grid = GridMap2D(name, self._cells(self._layout(header["layout"])))
         return MapFile(
             grid=grid,
             game="pret",
