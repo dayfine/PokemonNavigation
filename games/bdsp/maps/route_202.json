@@ -2,6 +2,7 @@
   "format": "pokenav-map/1",
   "name": "Route 202",
   "game": "bdsp",
+  "encounters": ["grass"],
   "legend": {
     "#": {"blocked": true},
     ".": {},
