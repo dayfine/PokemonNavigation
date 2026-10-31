@@ -1,0 +1,15 @@
+PokemonNavigation
+Copyright (c) 2026 dayfine and PokemonNavigation contributors. MIT License (LICENSE).
+
+Parts of this repository are ported from Arduino-Source
+(https://github.com/PokemonAutomation/Arduino-Source), MIT License,
+Copyright (c) 2021 Alexander J. Yee, where dayfine wrote them with Claude:
+
+- cpp/include/pokenav/Grid.h, TileGrid.h, LegPlanner.h, MapSet.h and
+  cpp/src/Grid.cpp, TileGrid.cpp, MapSet.cpp: from
+  SerialPrograms/Source/Pokemon/Navigation/ (Pokemon_Grid, Pokemon_TileGrid,
+  Pokemon_LegPlanner, Pokemon_MapSet).
+- cpp/tests/LegPlanner_tests.cpp, TileGrid_tests.cpp: from
+  Pokemon_LegPlanner_Tests.cpp and PokemonBDSP_AutoStory_Tests.cpp.
+- games/bdsp/maps/route202.txt: from
+  PokemonBDSP/Programs/AutoStory/Data/PokemonBDSP_AutoStory_Route202.cpp.

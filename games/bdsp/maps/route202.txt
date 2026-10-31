@@ -1,0 +1,59 @@
+// BDSP Route 202 tile grid.
+// Map: Route 202
+// Ported from Arduino-Source (MIT): SerialPrograms/Source/PokemonBDSP/Programs/AutoStory/Data/PokemonBDSP_AutoStory_Route202.cpp
+//
+//  Read from Bulbapedia's DP map of Route 202 (592 x 416 px). Its tile grid
+//  starts 8 px in from the left edge, so tile (x, y) covers pixels
+//  [8 + 16x, 24 + 16x) x [16y, 16y + 16). The half tiles at both side edges
+//  are trees and are left out.
+//
+//  Trees: each tile under a trunk or a canopy that hides most of the ground
+//  is blocked. The thin top of a canopy that only overhangs the row above a
+//  tree is not.
+//  Ledges: rows 9 and 18. On the DP map the south ledge looks like row 19,
+//  but on the console the player stands at (22,19) right under it, beside
+//  the trees at (21,19), and the sign at (24,20) is one row below.
+//  The Poke Ball item at (3,6) is blocked.
+//  The east tree wall comes in to column 31 at rows 15 to 17: walking east
+//  along row 16 stops at column 30 on the console (r75), and column 30 is
+//  open north to row 4.
+//  NPCs stand on the tile under their feet; the sprites rise into the row
+//  above. The girl at (22,15), pixel (365,235), is a trainer.
+//
+// Named tiles (x, y):
+//   CATCH_SPOT 19 22
+//   SAVE_SPOT 30 19
+//   TRAINER_A 7 11
+//   TRAINER_B 10 7
+//   TRAINER_C 26 4
+//   TRAINER_D 22 15
+//   EXIT_JUBILIFE 15 0
+//
+//   0         1         2         3
+//   012345678901234567890123456789012345
+###########........#################  //  0
+###########........#################  //  1
+###########........#################  //  2
+###########........#################  //  3
+###""""""........S..""""".N....#####  //  4
+###""""""..........."""""......#####  //  5
+####"""""..........."""""......#####  //  6
+###"""""".N...########"""......#####  //  7
+#########.....########.........#####  //  8
+#########vvvvv########vvvvvv...""###  //  9
+#######.......########"""""""""""###  // 10
+#######N..........####"""""""""""###  // 11
+###...............####"""""""""""###  // 12
+###............S..####"""""""""""###  // 13
+###...............####"""""""""""###  // 14
+###....##.........####N."""""""#####  // 15
+###""""##..............."""""""#####  // 16
+###""""##....................""#####  // 17
+###""""##vvvvv########vvvvvvvvv#####  // 18
+###""""##.....########.........#####  // 19
+###""""""......""""""...S......#####  // 20
+###""""""......""""""..........#####  // 21
+###""""""......""""""..........#####  // 22
+#####################..........#####  // 23
+#####################..........#####  // 24
+#########################......#####  // 25
