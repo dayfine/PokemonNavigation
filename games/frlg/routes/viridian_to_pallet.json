@@ -1,0 +1,16 @@
+{
+  "about": "The route drawn by hand on Route 1 (light blue line on route_frlg_r1.png), decoded against pokefirered and checked in issue #7. Southbound from Viridian City to Pallet Town, hopping ledges on the west side and keeping out of the grass but for the gap at the bottom. Each waypoint is a leg: its direction and where it ends; 'or' lists the other ends accepted for that waypoint (the leg may run one row over). Places are [map, x, y]. The maps come from a local pokefirered checkout and are not committed.",
+  "maps": ["ViridianCity", "Route1", "PalletTown"],
+  "start": ["ViridianCity", 22, 20],
+  "waypoints": [
+    {"direction": "south", "place": ["Route1", 10, 3], "or": [["Route1", 10, 2]], "note": "through the gap in Viridian's row-30 ledge at x 20..22; Viridian x 22 is Route 1 x 10"},
+    {"direction": "west", "place": ["Route1", 5, 3], "or": [["Route1", 5, 2]]},
+    {"direction": "south", "place": ["Route1", 5, 23], "note": "the west side, hopping the ledges at rows 5, 10, 15 and 20; no grass"},
+    {"direction": "east", "place": ["Route1", 20, 23], "note": "along a row below the row-20 ledge; no grass"},
+    {"direction": "south", "place": ["Route1", 20, 30], "or": [["Route1", 20, 29]], "note": "hops the row-26 ledge; not the row-31 ledge at x 20, which leads into grass"},
+    {"direction": "west", "place": ["Route1", 12, 30], "or": [["Route1", 12, 29]], "note": "back west on the sandy path"},
+    {"direction": "south", "place": ["PalletTown", 12, 14], "note": "hops the row-31 ledge; the grass gap at rows 35..39, x 12..13, is the only grass on the line"},
+    {"direction": "east", "place": ["PalletTown", 16, 14]}
+  ],
+  "expected": {"legs": 8, "turns": 7, "ledge_drops": 6, "grass_tiles": 5}
+}
