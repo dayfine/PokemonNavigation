@@ -47,13 +47,21 @@ class MapFilesTest(unittest.TestCase):
         jubilife = bdsp.load_map("Jubilife City")
         for building in jubilife.buildings:
             self.assertIs(jubilife.grid.at(building.door).behavior, Behavior.DOOR, building.name)
-        self.assertEqual(len(jubilife.npcs), 6)
+        self.assertEqual(len(jubilife.npcs), 7)
+        self.assertEqual([n.name for n in jubilife.npcs if n.wander],
+                         ["clown_poketch_company", "green_haired_man"])
 
     def test_standing_npcs_are_walls_in_the_world(self):
         world = bdsp.story_world()
         self.assertTrue(world.at(Place("Route 202", Tile(7, 11))).blocked)
         self.assertTrue(world.at(Place("Route 201", Tile(43, 3))).blocked)
         self.assertFalse(bdsp.load_map("Route 202").grid.at(Tile(7, 11)).blocked)
+
+    def test_wanderers_are_not_walls_in_the_world(self):
+        world = bdsp.jubilife_world()
+        self.assertTrue(world.at(Place("Jubilife City", Tile(44, 26))).blocked)
+        self.assertFalse(world.at(Place("Jubilife City", Tile(44, 16))).blocked)
+        self.assertFalse(world.at(Place("Jubilife City", Tile(13, 13))).blocked)
 
 
 class StoryWorldTest(unittest.TestCase):
