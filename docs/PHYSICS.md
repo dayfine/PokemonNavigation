@@ -4,6 +4,8 @@ Each item is a parameter of the movement model. A value is either measured
 (with the measurement in `measurements/`) or a guess, and is marked so. Values
 below are what has been seen on the console so far.
 
+Game-specific plans: [BDSP](../games/bdsp/MEASUREMENTS.md).
+
 ## Inputs and distance
 
 - **Tap**: a stick hold of N ms from standing still. How many tiles, by N, as a
