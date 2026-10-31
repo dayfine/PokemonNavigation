@@ -26,10 +26,13 @@ reads like a picture; everything else is a named record:
       "buildings": [{"name": "Mart", "kind": "mart", "door": [1, 0]}],
       "warps": [{"tile": [1, 0], "to_map": "Tiny Mart", "to_warp": 0}],
       "connections": [{"direction": "south", "map": "Route 9", "offset": -4}],
-      "notes": [{"text": "door row measured by walking north", "source": "console"}]
+      "notes": [{"text": "door row measured by walking north", "source": "console"}],
+      "image": {"source": "tiny_town.png", "origin": [8, 0], "tile_px": 16}
     }
 
-Only "format", "name", "legend" and "rows" are required. "elevation" is one
+"image" says where the map's picture is and where the grid sits on it, for
+drawing routes over it (`maps.render`). Only "format", "name", "legend" and
+"rows" are required. "elevation" is one
 hex digit (0 to F) per tile and defaults to all 0. A legend entry gives a
 cell's `blocked` (default false) and `behavior` (default "none"); its
 elevation comes from the elevation rows. The legend is the file's own, so a
@@ -170,6 +173,19 @@ class Note:
 
 
 @dataclass
+class MapImage:
+    """Where the map's picture is (a file name or page; images are not
+    committed) and how the tile grid sits on it: tile (x, y) covers pixels
+    [origin_x + tile_px * x, origin_x + tile_px * (x + 1)) across, and the
+    same down from origin_y."""
+
+    source: str
+    origin_x: int = 0
+    origin_y: int = 0
+    tile_px: int = 16
+
+
+@dataclass
 class MapFile:
     """Everything a map file holds. `encounters` is None when the file does
     not say where wild battles start, and empty for a map with none."""
@@ -184,6 +200,7 @@ class MapFile:
     warps: List[Warp] = field(default_factory=list)
     connections: List[Connection] = field(default_factory=list)
     notes: List[Note] = field(default_factory=list)
+    image: Optional[MapImage] = None
 
     @property
     def name(self) -> str:
@@ -282,6 +299,7 @@ def from_json(data: Dict[str, Any]) -> MapFile:
         warps=[_warp_from_json(w) for w in data.get("warps", [])],
         connections=[_connection_from_json(c) for c in data.get("connections", [])],
         notes=[Note(n["text"], n.get("source", "")) for n in data.get("notes", [])],
+        image=_image_from_json(data["image"]) if "image" in data else None,
     )
 
 
@@ -304,6 +322,8 @@ def to_json(map_file: MapFile, legend: Legend) -> Dict[str, Any]:
         "notes": [_drop_empty({"text": n.text, "source": n.source}) for n in map_file.notes],
     }
     data.update({key: value for key, value in records.items() if value})
+    if map_file.image is not None:
+        data["image"] = _image_to_json(map_file.image)
     return data
 
 
@@ -471,3 +491,12 @@ def _connection_from_json(data: Dict[str, Any]) -> Connection:
 def _connection_to_json(connection: Connection) -> Dict[str, Any]:
     return {"direction": connection.direction.name.lower(), "map": connection.map,
             "offset": connection.offset}
+
+
+def _image_from_json(data: Dict[str, Any]) -> MapImage:
+    origin = data.get("origin", [0, 0])
+    return MapImage(data["source"], int(origin[0]), int(origin[1]), int(data.get("tile_px", 16)))
+
+
+def _image_to_json(image: MapImage) -> Dict[str, Any]:
+    return {"source": image.source, "origin": [image.origin_x, image.origin_y], "tile_px": image.tile_px}

@@ -60,5 +60,10 @@
     {"text": "The east tree wall comes in to column 31 at rows 15 to 17: walking east along row 16 stops at column 30 (run r75), and column 30 is open north to row 4.", "source": "console (lab B)"},
     {"text": "NPCs stand on the tile under their feet; the sprites rise into the row above. Trainer facings are read from the sprites; the sight range of 4 is a guess.", "source": "Bulbapedia DP map"},
     {"text": "The Jubilife City connection offset (-30) is an estimate from the stairs; Jubilife's rows 46..47 are drawn blocked, so the two maps are not joined in one world yet.", "source": "Bulbapedia DP map"}
-  ]
+  ],
+  "image": {
+    "source": "https://archives.bulbagarden.net/wiki/File:Sinnoh_Route_202_DP.png",
+    "origin": [8, 0],
+    "tile_px": 16
+  }
 }

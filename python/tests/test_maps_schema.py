@@ -8,7 +8,7 @@ import unittest
 from pokenav.grid.geometry import Direction, Tile
 from pokenav.grid.maps import schema
 from pokenav.grid.maps.model import OPEN, WALL, Behavior, Cell, GridMap2D
-from pokenav.grid.maps.schema import Encounter, MapFile, Npc, Wander, wild_battle_possible
+from pokenav.grid.maps.schema import Encounter, MapFile, MapImage, Npc, Wander, wild_battle_possible
 
 from tests.paths import DOCS_EXAMPLES
 
@@ -48,6 +48,7 @@ class LoadTest(unittest.TestCase):
         self.assertEqual((town.warps[0].to_map, town.warps[0].to_warp), ("Tiny Mart", 0))
         self.assertEqual(town.connections[0].offset, -4)
         self.assertEqual(town.notes[0].source, "console")
+        self.assertEqual(town.image, MapImage("tiny_town.png", 8, 0, 16))
         self.assertEqual(town.encounters, frozenset())
 
     def test_only_the_cells_are_required(self):
