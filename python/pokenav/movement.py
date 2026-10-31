@@ -22,8 +22,8 @@ player or the tile is on an "any level" elevation (a transition tile), and a
 "keep level" tile (a bridge) leaves the player's elevation as it was. What
 the numbers are in each game is in `pokenav.games`.
 
-    >>> from pokenav.maps.textgrid import read
-    >>> grid = read("#.#\\n#v#\\n#.#\\n").grid
+    >>> from pokenav.maps.textgrid import parse
+    >>> grid = parse("#.#\\n#v#\\n#.#\\n").grid
     >>> step(grid, PlayerState(Tile(1, 0)), Direction.SOUTH)
     Hop(state=PlayerState(tile=Tile(x=1, y=2), elevation=0))
     >>> step(grid, PlayerState(Tile(1, 2)), Direction.NORTH)
