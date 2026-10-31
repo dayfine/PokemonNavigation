@@ -7,7 +7,7 @@ and stores its own legend.
 
 The standard legend:
 
-    #  wall               .  open ground        "  tall grass
+    #  wall               .  open ground        ,  tall grass
     v ^ < >  ledges, crossed south / north / west / east
     D  door (walk into)   W  warp (step onto)   S  sign
     ~  water              =  counter            i  ice
@@ -117,7 +117,7 @@ STANDARD = Legend(
     cells=[
         ("#", Cell(blocked=True)),
         (".", OPEN),
-        ('"', Cell(behavior=Behavior.TALL_GRASS)),
+        (",", Cell(behavior=Behavior.TALL_GRASS)),
         ("v", Cell(blocked=True, behavior=Behavior.LEDGE_SOUTH)),
         ("^", Cell(blocked=True, behavior=Behavior.LEDGE_NORTH)),
         ("<", Cell(blocked=True, behavior=Behavior.LEDGE_WEST)),

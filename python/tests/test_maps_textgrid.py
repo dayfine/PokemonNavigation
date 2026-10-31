@@ -20,7 +20,7 @@ SMALL = """\
 // A free comment line.
 //   START 1 0
 #..?..#   // 0
-#..\"\".#   // 1
+#..,,.#   // 1
 #vvv..#
 #.....#
 #S.N.D#   // 4
@@ -52,7 +52,7 @@ class LegendTest(unittest.TestCase):
 
     def test_show_char_falls_back_to_the_nearest_kind(self):
         self.assertEqual(STANDARD.show_char(Cell(blocked=False, behavior=Behavior.LEDGE_SOUTH)), "v")
-        self.assertEqual(STANDARD.show_char(Cell(blocked=True, behavior=Behavior.TALL_GRASS)), '"')
+        self.assertEqual(STANDARD.show_char(Cell(blocked=True, behavior=Behavior.TALL_GRASS)), ",")
         self.assertEqual(Legend([(".", OPEN)]).show_char(WALL), "?")
 
     def test_a_legend_with_npc_facings(self):
@@ -119,7 +119,7 @@ class WriteTest(unittest.TestCase):
     def test_show_with_marks(self):
         small = textgrid.read(SMALL)
         shown = textgrid.show(small.grid, marks={Tile(1, 1): "@", Tile(9, 9): "x"})
-        self.assertEqual(shown.splitlines()[1], '#@."".#')
+        self.assertEqual(shown.splitlines()[1], '#@.,,.#')
 
 
 class CommandLineTest(unittest.TestCase):
