@@ -81,4 +81,41 @@ after it, for the walker to check on arrival.
 Search time grows with the maps: Route 202 plans in well under a second,
 the story maps' 3 x 3 start to Sandgem's Pokemon Center in about a second,
 but Viridian City, Route 1 and Pallet Town together take minutes, so
-`routing.score` ranks given routes there rather than searching.
+`routing.score` proposes and ranks routes there rather than searching.
+
+## Scoring and ranking (`routing.score`)
+
+A route is judged by risk, not length. `score(planner, starts, legs, goal)`
+replays the legs and gives a `RouteScore`:
+
+| Field | Meaning |
+|---|---|
+| `risk` | each open leg ("unprotected move") counts 1 / (1 + margin); the margin is how many tiles of extra error the leg takes before the route fails (up to `max_margin`, 3) |
+| `localizations` | legs that shrink the belief (a wall or a ledge landing), past the first |
+| `turns`, `turnarounds` | direction changes, and those back the way the route came |
+| `grass` | tall-grass tiles crossed, on their own |
+| `tiles` | length |
+
+`rank` sorts routes lexicographically (risk, localizations, turnarounds,
+turns, grass, tiles) by default, or by a weighted sum with
+`ScoreOptions(weights=...)`; `score.WEIGHTS` is a starting set.
+`ScoreOptions(ledges_localize=False)` counts ledge legs as unprotected, as
+the old planners did. `propose` turns shortest paths under several turn and
+grass weights into planned legs (split at each ledge landing), and
+`plan_ranked` proposes and ranks. `checks(starts, legs)` lists for each leg
+the states the player should be in and what proves it: "wall bump", "ledge
+landing", "map banner" (a new map), or "none".
+
+### Route 1 again
+
+With `WEIGHTS` and a grass weight of 2 or more, the top-ranked proposal for
+Viridian City to Pallet Town has the drawn line's shape: its 8 leg
+directions, 6 ledge drops, 5 grass tiles and rows. As with the shortest path,
+its west-side and row-26 columns (7 and 18) differ from the drawn 5 and 20:
+nothing in the score tells those columns apart. With grass at 0.5, or
+lexicographic ranking (risk first), the top route cuts through 10 to 15 grass
+tiles for fewer open legs. The old planner's view, grass at 20 a tile and no
+ledges, gives a zigzag with more turns and grass, which ranks below the
+drawn line; counting ledges as unprotected adds 6 to the drawn line's risk.
+Open legs on FRLG are taken as exact (`games.frlg.OPEN_LEG_ERROR`), a guess
+until measured.
