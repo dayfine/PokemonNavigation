@@ -1,0 +1,23 @@
+{
+  "format": "pokenav-map/1",
+  "name": "Tiny Town",
+  "game": "example",
+  "encounters": [],
+  "legend": {
+    "#": {"blocked": true},
+    ".": {},
+    "D": {"blocked": true, "behavior": "door"}
+  },
+  "rows": [
+    "#D#",
+    "#.#"
+  ],
+  "elevation": ["333", "333"],
+  "points": [{"name": "DOORSTEP", "tile": [1, 1], "proof": "the door is north"}],
+  "npcs": [{"name": "guard", "tile": [1, 1], "facing": "south", "sight": 3}],
+  "signs": [{"name": "town_sign", "tile": [0, 0], "facing": "north"}],
+  "buildings": [{"name": "Mart", "kind": "mart", "door": [1, 0]}],
+  "warps": [{"tile": [1, 0], "to_map": "Tiny Mart", "to_warp": 0}],
+  "connections": [{"direction": "south", "map": "Route 9", "offset": -4}],
+  "notes": [{"text": "door row measured by walking north", "source": "console"}]
+}
