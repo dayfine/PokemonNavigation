@@ -7,20 +7,10 @@ every level, and 15 is a multi-level tile (bridges) that keeps the player's
 elevation. The screen is 15 x 10 tiles (VIEWPORT). Behavior numbers are from
 include/constants/metatile_behaviors.h.
 
-Command line: import maps from a local pokefirered checkout into map files
-(run from the repository root):
-
-    PYTHONPATH=python python3 -m pokenav.games.frlg ~/pokefirered Route1 PalletTown --out /tmp/frlg
-    wrote /tmp/frlg/Route1.json (24 x 40)
-    wrote /tmp/frlg/PalletTown.json (24 x 20)
+The command line that imports maps from a pokefirered checkout is
+`pokenav.cli.import_frlg`.
 """
 
-import argparse
-import os
-import sys
-from typing import List, Optional
-
-from pokenav.maps import schema, textgrid
 from pokenav.maps.model import Behavior, Viewport
 from pokenav.maps.pret import Checkout, PretGame
 from pokenav.movement import ElevationRules
@@ -90,24 +80,3 @@ BEHAVIORS.update(_same(Behavior.SIGN, 0x84, 0x87, 0x88, 0x91, 0x92))
 
 PRET = PretGame(primary_metatiles=PRIMARY_METATILES, behaviors=BEHAVIORS)
 
-
-def main(argv: Optional[List[str]] = None) -> int:
-    parser = argparse.ArgumentParser(prog="python3 -m pokenav.games.frlg",
-                                     description="Import FRLG maps from a pokefirered checkout.")
-    parser.add_argument("checkout", help="path to a pokefirered checkout")
-    parser.add_argument("maps", nargs="+", help="map names, as in data/maps/ (Route1)")
-    parser.add_argument("--out", default=".", help="directory to write <map>.json files to")
-    args = parser.parse_args(argv)
-
-    checkout = Checkout(args.checkout, PRET)
-    os.makedirs(args.out, exist_ok=True)
-    for name in args.maps:
-        map_file = checkout.load_map(name)
-        path = os.path.join(args.out, name + ".json")
-        schema.dump(path, map_file, textgrid.STANDARD.cells())
-        print("wrote %s (%d x %d)" % (path, map_file.grid.width, map_file.grid.height))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
