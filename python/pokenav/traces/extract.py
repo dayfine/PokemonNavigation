@@ -10,6 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional
 from .cfr_parser import list_out_files, parse_out_file
 from .common import format_time
 from .log_parser import parse_log
+from .segment import segment
 
 
 def default_cfr_dir(log_path: str) -> str:
@@ -85,16 +86,7 @@ def write_jsonl(records: Iterable[Dict[str, Any]], path: Optional[str], append: 
     """Writes records, one JSON object per line. With `append`, skips records
     whose id is already in the file. Returns how many were written."""
     import sys
-    existing = set()
-    if append and path and os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        existing.add(json.loads(line).get("id"))
-                    except ValueError:
-                        pass
+    existing = read_ids(path) if append and path else set()
     count = 0
     if path:
         d = os.path.dirname(os.path.abspath(path))
@@ -113,6 +105,63 @@ def write_jsonl(records: Iterable[Dict[str, Any]], path: Optional[str], append: 
         if path:
             f.close()
     return count
+
+
+def read_ids(path: str) -> set:
+    """The `id`s of the records in a .jsonl file, or in every .jsonl file of a
+    directory."""
+    paths = [path]
+    if os.path.isdir(path):
+        paths = [os.path.join(path, n) for n in sorted(os.listdir(path)) if n.endswith(".jsonl")]
+    ids = set()
+    for p in paths:
+        if not os.path.exists(p):
+            continue
+        with open(p, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        ids.add(json.loads(line).get("id"))
+                    except ValueError:
+                        pass
+    return ids
+
+
+def write_segments(records: List[Dict[str, Any]], out_dir: str, append: bool = False
+                   ) -> Dict[str, int]:
+    """Writes one .jsonl per segment (segment.py) to `out_dir`/<name>.jsonl.
+    `{day}` in `out_dir` is replaced by the day the segment started, so a
+    batch from the day before goes to that day's folder. With `append`,
+    records already in the folder are skipped and a segment whose file exists
+    is appended to it; without it, existing files of the same name are
+    replaced. Returns {path: records written}."""
+    written = {}  # type: Dict[str, int]
+    seen = {}  # type: Dict[str, set]
+    for key, recs in segment(records).items():
+        day, name = key.split("/", 1)
+        d = out_dir.replace("{day}", day)
+        if append and d not in seen:
+            seen[d] = read_ids(d) if os.path.isdir(d) else set()
+        if append:
+            recs = [r for r in recs if r.get("id") not in seen[d]]
+            if not recs:
+                continue
+        path = os.path.join(d, name + ".jsonl")
+        written[path] = write_jsonl(recs, path, append=append)
+    return written
+
+
+def read_trace(path: str) -> List[Dict[str, Any]]:
+    """A .jsonl file, or every .jsonl file in a directory, sorted by time."""
+    if not os.path.isdir(path):
+        return read_jsonl(path)
+    out = []  # type: List[Dict[str, Any]]
+    for n in sorted(os.listdir(path)):
+        if n.endswith(".jsonl") or n.endswith(".jsonl.gz"):
+            out.extend(read_jsonl(os.path.join(path, n)))
+    out.sort(key=lambda r: (r["t"], r.get("source", ""), r.get("line") or 0))
+    return out
 
 
 def read_jsonl(path: str) -> List[Dict[str, Any]]:

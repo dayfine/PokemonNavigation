@@ -8,8 +8,9 @@ import unittest
 
 from pokenav.traces.cfr_parser import parse_out_text
 from pokenav.traces.common import parse_since, stick_direction
-from pokenav.traces.extract import extract, read_jsonl, write_jsonl
+from pokenav.traces.extract import extract, read_jsonl, read_trace, write_jsonl, write_segments
 from pokenav.traces.log_parser import LogParser
+from pokenav.traces.segment import batch_tag, objective_slug, segment
 from pokenav.traces.summary import summarize
 
 PROFILE = "/lab/Profiles/lab-B"
@@ -238,6 +239,100 @@ class ExtractTests(unittest.TestCase):
             text = summarize(records)
             self.assertIn("tap runs: 2", text)
             self.assertIn("walk_until blocked 1", text)
+
+
+def _rec(t, source, run_start, **kw):
+    rec = {"v": 1, "kind": "input", "t": "2026-10-30T" + t, "source": source,
+           "run_start": "2026-10-30T" + run_start}
+    if source == "cfr":
+        rec["program"] = "NintendoSwitch:CommandFileRunner"
+    rec.update(kw)
+    rec["id"] = "|".join([source, rec["t"], rec.get("batch") or "", str(rec.get("line") or "")])
+    return rec
+
+
+def _cfr(t, batch, line=1):
+    return _rec(t, "cfr", t, batch=batch, line=line)
+
+
+def _story(t, run_start, objective, checkpoint=None):
+    return _rec(t, "program", run_start, program="PokemonBDSP:AutoStory",
+                objective=objective, checkpoint=checkpoint)
+
+
+CLOWN = "00.05f Jubilife: the clown by the Poketch Company (events)."
+POKETCH = "00.05g Jubilife: the Poketch from the president (events)."
+
+
+class SegmentTests(unittest.TestCase):
+    def setUp(self):
+        self.records = sorted([
+            _cfr("19:00:00.000", "m158-load"),
+            _cfr("19:01:00.000", "m158-w1"),
+            _cfr("19:02:00.000", "m159-w1"),
+            _cfr("19:50:00.000", "r158a-load"),
+            _story("19:52:00.000", "19:52:00.000", CLOWN, "jubilife_clown_company"),
+            _story("19:53:00.000", "19:52:00.000", CLOWN, "jubilife_clown_company"),
+            _rec("19:54:00.000", "program", "19:54:00.000", program="NintendoSwitch:PreventSleep"),
+            _cfr("19:55:00.000", "keepawake1"),
+            _cfr("20:00:00.000", "r159a-load"),
+            _story("20:01:00.000", "20:01:00.000", CLOWN, "jubilife_clown_company"),
+            #  After the last clown run: walking from its save toward the next leg.
+            _cfr("20:05:00.000", "m160-w1"),
+            _cfr("22:00:00.000", "r160a-load"),
+            _story("22:01:00.000", "22:01:00.000", POKETCH, "jubilife_poketch"),
+        ], key=lambda r: r["t"])
+
+    def test_names(self):
+        segs = segment(self.records)
+        self.assertEqual(list(segs), [
+            "2026-10-30/cfr-0005f-jubilife-clown-company-m158-m159",
+            "2026-10-30/r158-r159-0005f-jubilife-clown-company",
+            "2026-10-30/keepawake-1954-1955",
+            "2026-10-30/cfr-0005g-jubilife-poketch-m160",
+            "2026-10-30/r160-0005g-jubilife-poketch",
+        ])
+        self.assertEqual(sorted(r["id"] for v in segs.values() for r in v),
+                         sorted(r["id"] for r in self.records))
+
+    def test_gap_and_midnight_cut_a_series(self):
+        late = _cfr("23:59:00.000", "m161-w1")
+        early = dict(_cfr("00:01:00.000", "m161-w2"), t="2026-10-31T00:01:00.000",
+                     run_start="2026-10-31T00:01:00.000")
+        segs = segment(self.records + [late, early])
+        self.assertIn("2026-10-30/cfr-0005g-jubilife-poketch-m161", segs)
+        self.assertIn("2026-10-31/cfr-0005g-jubilife-poketch-m161", segs)
+
+    def test_checkpoint_range_and_objective_text(self):
+        recs = [
+            _story("13:00:00.000", "13:00:00.000", "00.05a Jubilife: steps.", "jubilife_center"),
+            _story("13:01:00.000", "13:00:00.000", "00.05b Jubilife: school.", "jubilife_school"),
+            _story("13:02:00.000", "13:00:00.000", "00.05c Jubilife: Barry.", "jubilife_barry"),
+            _story("14:00:00.000", "14:00:00.000", "00.04 - After Pokedex (after the catch). Ends: x"),
+        ]
+        self.assertEqual(list(segment(recs)), [
+            "2026-10-30/run-1300-0005a-jubilife-center-to-barry",
+            "2026-10-30/run-1400-0004-after-pokedex",
+        ])
+
+    def test_helpers(self):
+        self.assertEqual(batch_tag("r163a-load"), "r163")
+        self.assertEqual(batch_tag("m158-w1"), "m158")
+        self.assertEqual(batch_tag("del-3"), "del")
+        self.assertEqual(objective_slug(CLOWN), "0005f")
+        self.assertEqual(objective_slug("Route 202 to Sandgem's Pokemon Center (events)."),
+                         "route-202-to-sandgem")
+
+    def test_write_segments_append(self):
+        with tempfile.TemporaryDirectory() as root:
+            out = os.path.join(root, "{day}-lab-B")
+            first = write_segments(self.records[:5], out)
+            self.assertEqual(sum(first.values()), 5)
+            again = write_segments(self.records, out, append=True)
+            self.assertEqual(sum(again.values()), len(self.records) - 5)
+            back = read_trace(os.path.join(root, "2026-10-30-lab-B"))
+            self.assertEqual([r["id"] for r in back], [r["id"] for r in self.records])
+            self.assertEqual(write_segments(self.records, out, append=True), {})
 
 
 if __name__ == "__main__":

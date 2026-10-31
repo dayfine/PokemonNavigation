@@ -1,12 +1,14 @@
 #!/bin/sh
-# Append the movement trace of a BDSP console run to measurements/bdsp/.
+# Add the movement trace of a BDSP console run to measurements/bdsp/.
 #
 # Usage: scripts/collect_bdsp_trace.sh START_TIME [PROFILE]
 #   START_TIME  when the run started, local time: '2026-10-30 20:49' or '20:49' (today)
 #   PROFILE     SerialPrograms profile folder name (default lab-B)
 #
-# Writes measurements/bdsp/<date>-<PROFILE>.jsonl (date of START_TIME, else today),
-# skipping records already in it, and prints a short summary of what was added.
+# Writes one file per segment (a series of AutoStory runs, a CFR session,
+# keep-awake presses; see docs/TRACES.md) to measurements/bdsp/<day>-<PROFILE>/,
+# <day> being the day the segment started. Skips records already there and
+# prints the files written and a short summary.
 set -eu
 
 if [ $# -lt 1 ]; then
@@ -18,8 +20,7 @@ PROFILE=${2:-lab-B}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 PROFILE_DIR="$HOME/Library/Application Support/SerialPrograms/Profiles/$PROFILE"
 LOG="$PROFILE_DIR/SerialPrograms.log"
-DAY=$(printf '%s' "$START" | grep -Eo '^[0-9]{4}-[0-9]{2}-[0-9]{2}' || date +%F)
-OUT="$ROOT/measurements/bdsp/$DAY-$PROFILE.jsonl"
 
 cd "$ROOT/python"
-python3 -m pokenav.traces extract "$LOG" --since "$START" --out "$OUT" --append
+python3 -m pokenav.traces extract "$LOG" --since "$START" \
+    --out-dir "$ROOT/measurements/bdsp/{day}-$PROFILE" --append

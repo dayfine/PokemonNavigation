@@ -9,8 +9,8 @@ screen showed.
 
 ```sh
 cd python
-python3 -m pokenav.traces extract <SerialPrograms.log> [--since TIME] [--out FILE.jsonl]
-python3 -m pokenav.traces summary FILE.jsonl
+python3 -m pokenav.traces extract <SerialPrograms.log> [--since TIME] [--out FILE.jsonl | --out-dir DIR]
+python3 -m pokenav.traces summary FILE.jsonl|DIR
 ```
 
 - `<SerialPrograms.log>`: the lab app's log, e.g.
@@ -20,8 +20,12 @@ python3 -m pokenav.traces summary FILE.jsonl
   next to the log (`--cfr DIR` for another folder, `--no-cfr` to skip them).
 - `--since`: local time, `2026-10-30`, `2026-10-30 20:49` or `20:49` (today).
   `--cfr-all` keeps every `.out` file regardless of `--since`.
-- `--append`: add to `--out`, skipping records whose `id` is already there.
+- `--out-dir`: one file per segment (below), `DIR/<name>.jsonl`; `{day}` in
+  `DIR` is replaced by the day the segment started.
+- `--append`: add to `--out` or `--out-dir`, skipping records whose `id` is
+  already there (anywhere in the folder for `--out-dir`).
 - A summary (outcome counts, single holds, tap runs) goes to stderr.
+  `summary` takes a file or a folder of them.
 
 After each console run, the main session runs
 
@@ -29,9 +33,37 @@ After each console run, the main session runs
 scripts/collect_bdsp_trace.sh "2026-10-30 20:49"   # the run's start time [PROFILE]
 ```
 
-which appends to `measurements/bdsp/<date>-lab-B.jsonl`. Run it after the run
-has ended: a walk still going is recorded as `unterminated` and is not
-replaced later.
+which adds the run's segments to `measurements/bdsp/<day>-lab-B/`. Run it
+after the run has ended: a walk still going is recorded as `unterminated` and
+is not replaced later.
+
+## Segments
+
+A day's trace is split into files by what was being done
+(`python/pokenav/traces/segment.py`). A unit is one program run or one CFR
+batch; units form three series:
+
+| Series | Units | File name |
+|---|---|---|
+| AutoStory runs | AutoStory runs, keyed by the objective they started from, and the CFR batches that loaded their save (`r<N>...`, e.g. `r163a-load`) | `<first>-<last run tag>-<objective id>-<checkpoints>`, e.g. `r158-r163-0005f-jubilife-clown-company`, `r142-r153-0005a-jubilife-center-to-barry` |
+| CFR work | other CFR batches (walking by hand, probing, menus), keyed by the objective of the next AutoStory run (else the one before) | `cfr-<objective id>-<what that run does>-<first>-<last batch tag>`, e.g. `cfr-0005f-jubilife-clown-company-m158-m163` |
+| Keep-awake | other programs (`PreventSleep`) and `keepawake*` CFR batches | `keepawake-<start>-<end>` (HHMM) |
+
+A series is cut where a unit starts more than 45 minutes after the previous
+unit of the series ended, and at midnight. Other details:
+
+- A run tag is the batch name's leading letters and digits (`m158-w1` ->
+  `m158`, `r163a-load` -> `r163`); a run with no load batch is named
+  `run-<HHMM>`.
+- The objective id drops the dot (`00.05f` -> `0005f`); an objective
+  without one adds nothing. Then come the checkpoints the runs went
+  through, first to last (`sandgem-center-to-mart-lady`), or, for runs
+  without checkpoints, the objective's text (`0004-after-pokedex`).
+- Load batches with no AutoStory run in the trace are `cfr-loads-<tags>`.
+- AutoStory runs of two panels can overlap in time; so can their segments.
+- Names depend on what the extraction saw: collecting one run at a time can
+  name a segment differently than extracting the whole day at once. Records
+  are never duplicated (`--append` skips known `id`s).
 
 ## Sources
 
@@ -147,8 +179,10 @@ FRLG) can add fields for them:
 
 ## Summary of 2026-10-30 (lab-B)
 
-`measurements/bdsp/2026-10-30-lab-B.jsonl`: the lab-B log from 2026-10-30
-00:00 and every CFR `.out` file (some from 2026-10-29). 7,746 records:
+`measurements/bdsp/2026-10-30-lab-B/` (26 files) and
+`measurements/bdsp/2026-10-29-lab-B/` (4 files, CFR batches of the day
+before): the lab-B log from 2026-10-30 00:00 and every CFR `.out` file.
+7,746 records:
 5,173 program inputs, 859 program walks, 1,490 CFR inputs, 224 CFR walks.
 
 - Program walks (`walk_until`): blocked 575, limit 219, transition 25,
