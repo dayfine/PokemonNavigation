@@ -26,8 +26,8 @@ Across maps, `world_step` does the same on a `World`: a step off an edge
 continues onto the connected map, an edge with no connection is a wall, and a
 warp puts the player at its arrival (`Warped`).
 
-    >>> from pokenav.maps.textgrid import read
-    >>> grid = read("#.#\\n#v#\\n#.#\\n").grid
+    >>> from pokenav.maps.textgrid import parse
+    >>> grid = parse("#.#\\n#v#\\n#.#\\n").grid
     >>> step(grid, PlayerState(Tile(1, 0)), Direction.SOUTH)
     Hop(state=PlayerState(tile=Tile(x=1, y=2), elevation=0))
     >>> step(grid, PlayerState(Tile(1, 2)), Direction.NORTH)
@@ -38,7 +38,7 @@ import enum
 from typing import AbstractSet, FrozenSet, NamedTuple, Optional, Union
 
 from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import FORCED_DIRECTION, LEDGE_DIRECTION, Behavior, Cell, MapGrid
+from pokenav.maps.model import FORCED_DIRECTION, LEDGE_DIRECTION, Behavior, Cell, GridMap2D
 from pokenav.maps.world import Place, World
 
 
@@ -106,7 +106,7 @@ Objects = AbstractSet[Tile]
 LEDGE_HOP_TILES = 2
 
 
-def step(grid: MapGrid, state: PlayerState, direction: Direction,
+def step(grid: GridMap2D, state: PlayerState, direction: Direction,
          rules: ElevationRules = FLAT, objects: Objects = frozenset()) -> StepResult:
     """What pressing `direction` once does from `state`."""
     result = _single_step(grid, state, direction, rules, objects)
@@ -115,7 +115,7 @@ def step(grid: MapGrid, state: PlayerState, direction: Direction,
     return result
 
 
-def held_at(grid: MapGrid, state: PlayerState, direction: Direction,
+def held_at(grid: GridMap2D, state: PlayerState, direction: Direction,
             rules: ElevationRules = FLAT, objects: Objects = frozenset()) -> bool:
     """Whether holding `direction` keeps the player at `state`."""
     result = step(grid, state, direction, rules, objects)
@@ -137,7 +137,7 @@ class Walk(NamedTuple):
         return isinstance(self.stop, Blocked) and self.stop.reason in HOLDING_REASONS
 
 
-def walk(grid: MapGrid, state: PlayerState, direction: Direction,
+def walk(grid: GridMap2D, state: PlayerState, direction: Direction,
          rules: ElevationRules = FLAT, objects: Objects = frozenset(),
          max_tiles: Optional[int] = None) -> Walk:
     """Holds `direction` from `state` until a step fails, or until at least
@@ -160,7 +160,7 @@ def tiles_moved(result: StepResult, start: Tile) -> int:
     return 0
 
 
-def _single_step(grid: MapGrid, state: PlayerState, direction: Direction,
+def _single_step(grid: GridMap2D, state: PlayerState, direction: Direction,
                  rules: ElevationRules, objects: Objects) -> StepResult:
     """One step without sliding."""
     target = state.tile.step(direction)
@@ -189,7 +189,7 @@ def _enter(state: PlayerState, target: Tile, cell: Cell, rules: ElevationRules) 
     return Moved(PlayerState(target, _elevation_after(state.elevation, cell.elevation, rules)))
 
 
-def _ledge(grid: MapGrid, state: PlayerState, direction: Direction, cell: Cell,
+def _ledge(grid: GridMap2D, state: PlayerState, direction: Direction, cell: Cell,
            rules: ElevationRules, objects: Objects) -> StepResult:
     """A step into a ledge: a hop if it is crossed in its direction and the
     tile past it can be stood on."""
@@ -202,7 +202,7 @@ def _ledge(grid: MapGrid, state: PlayerState, direction: Direction, cell: Cell,
     return Hop(PlayerState(landing, _elevation_after(state.elevation, landing_cell.elevation, rules)))
 
 
-def _slide(grid: MapGrid, state: PlayerState, direction: Direction,
+def _slide(grid: GridMap2D, state: PlayerState, direction: Direction,
            rules: ElevationRules, objects: Objects) -> Moved:
     """Moves on from `state` while it is on ice (onward in `direction`) or a
     forced-move tile (in that tile's direction), until a step fails."""
