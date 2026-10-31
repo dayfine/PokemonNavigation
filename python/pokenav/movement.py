@@ -22,6 +22,10 @@ player or the tile is on an "any level" elevation (a transition tile), and a
 "keep level" tile (a bridge) leaves the player's elevation as it was. What
 the numbers are in each game is in `pokenav.games`.
 
+Across maps, `world_step` does the same on a `World`: a step off an edge
+continues onto the connected map, an edge with no connection is a wall, and a
+warp puts the player at its arrival (`Warped`).
+
     >>> from pokenav.maps.textgrid import read
     >>> grid = read("#.#\\n#v#\\n#.#\\n").grid
     >>> step(grid, PlayerState(Tile(1, 0)), Direction.SOUTH)
@@ -35,6 +39,7 @@ from typing import AbstractSet, FrozenSet, NamedTuple, Optional, Union
 
 from pokenav.geometry import Direction, Tile
 from pokenav.maps.model import FORCED_DIRECTION, LEDGE_DIRECTION, Behavior, Cell, MapGrid
+from pokenav.maps.world import Place, World
 
 
 class PlayerState(NamedTuple):
@@ -229,3 +234,99 @@ def _elevation_allows(current: int, target: int, rules: ElevationRules) -> bool:
 
 def _elevation_after(current: int, target: int, rules: ElevationRules) -> int:
     return current if target in rules.keep_level else target
+
+
+#   ---- across maps ----
+
+class WorldState(NamedTuple):
+    """Where the player is in a world: a place, and their elevation."""
+
+    place: Place
+    elevation: int = 0
+
+
+class Warped(NamedTuple):
+    """The player went through a warp and arrived at `state`, facing
+    `facing`."""
+
+    state: WorldState
+    facing: Direction
+
+
+WorldStepResult = Union[Moved, Hop, Blocked, Warp, Edge, Warped]
+
+
+def world_step(world: World, state: WorldState, direction: Direction,
+               rules: ElevationRules = FLAT, objects: AbstractSet[Place] = frozenset()) -> WorldStepResult:
+    """What pressing `direction` once does from `state`, across maps.
+
+    Returns Moved, Hop or Blocked like `step`, with WorldStates; Warped for a
+    warp whose target is loaded; and, for a way out of the loaded maps, the
+    unresolved Warp(tile) or Edge(direction)."""
+    name = state.place.map
+    local_objects = {p.tile for p in objects if p.map == name}
+    local = PlayerState(state.place.tile, state.elevation)
+    result = step(world.grid(name), local, direction, rules, local_objects)
+    if isinstance(result, (Moved, Hop)):
+        return type(result)(_in_world(name, result.state))
+    if isinstance(result, Edge):
+        return _cross_edge(world, state, direction, rules, objects)
+    if isinstance(result, Warp):
+        return _warp(world, state, Place(name, result.tile), direction, rules, result)
+    return result
+
+
+def world_walk(world: World, state: WorldState, direction: Direction,
+               rules: ElevationRules = FLAT, objects: AbstractSet[Place] = frozenset(),
+               max_tiles: Optional[int] = None) -> Walk:
+    """`walk` across maps: holds `direction` until a step does not move or
+    hop, or until at least `max_tiles` tiles are covered. A warp ends the
+    walk (its `stop` is the Warped result, its `state` the tile before)."""
+    tiles = 0
+    while max_tiles is None or tiles < max_tiles:
+        result = world_step(world, state, direction, rules, objects)
+        if not isinstance(result, (Moved, Hop)):
+            return Walk(state, tiles, result)
+        tiles += _world_tiles_moved(result, state.place)
+        state = result.state
+    return Walk(state, tiles, None)
+
+
+def _in_world(name: str, state: PlayerState) -> WorldState:
+    return WorldState(Place(name, state.tile), state.elevation)
+
+
+def _cross_edge(world: World, state: WorldState, direction: Direction,
+                rules: ElevationRules, objects: AbstractSet[Place]) -> WorldStepResult:
+    beyond = state.place.step(direction)
+    if world.connection_at(beyond) is None:
+        return Blocked(BlockReason.WALL)
+    target = world.across_edge(beyond)
+    if target is None:
+        return Edge(direction)
+    if target in objects:
+        return Blocked(BlockReason.OBJECT)
+    result = _enter(PlayerState(state.place.tile, state.elevation), target.tile, world.at(target), rules)
+    if isinstance(result, Moved):
+        return Moved(_in_world(target.map, result.state))
+    if isinstance(result, Warp):
+        return _warp(world, state, target, direction, rules, result)
+    return result
+
+
+def _warp(world: World, state: WorldState, warp_place: Place, direction: Direction,
+          rules: ElevationRules, unresolved: Warp) -> WorldStepResult:
+    arrival = world.warp_arrival(warp_place, direction)
+    if arrival is None:
+        return unresolved
+    elevation = _elevation_after(state.elevation, world.at(arrival.place).elevation, rules)
+    return Warped(WorldState(arrival.place, elevation), arrival.facing)
+
+
+def _world_tiles_moved(result: StepResult, start: Place) -> int:
+    """Tiles covered by a Moved or Hop result: a step onto another map counts
+    one tile."""
+    end = result.state.place
+    if end.map != start.map:
+        return 1
+    return start.tile.manhattan(end.tile)
