@@ -14,10 +14,10 @@ import copy
 import enum
 from typing import Dict, List, Set
 
-from pokenav.geometry import CLOCKWISE, Direction, Tile
-from pokenav.maps.model import WALL, GridMap2D
-from pokenav.maps.schema import MapFile, Npc, Sign, Wander
-from pokenav.movement import FLAT, ElevationRules, PlayerState, held_at
+from pokenav.grid.geometry import CLOCKWISE, Direction, Tile
+from pokenav.grid.maps.model import WALL, GridMap2D
+from pokenav.grid.maps.schema import MapFile, Npc, Sign, Wander
+from pokenav.grid.movement import FLAT, ElevationRules, PlayerState, held_at
 
 
 class Blocking(enum.Enum):

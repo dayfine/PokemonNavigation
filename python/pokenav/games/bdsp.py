@@ -17,10 +17,10 @@ Measured walks to check the maps against are in games/bdsp/wall_hits.json.
 import os
 from typing import List
 
-from pokenav.maps import schema
-from pokenav.maps.objects import with_static_npcs_as_walls
-from pokenav.maps.schema import MapFile
-from pokenav.maps.world import World
+from pokenav.grid.maps import schema
+from pokenav.grid.maps.objects import with_static_npcs_as_walls
+from pokenav.grid.maps.schema import MapFile
+from pokenav.grid.maps.world import World
 
 #   games/bdsp, from python/pokenav/games.
 GAME_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "games", "bdsp")
