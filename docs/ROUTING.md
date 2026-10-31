@@ -65,20 +65,28 @@ it ended there:
 |---|---|---|
 | `WALL` | the player is stopped | each state's stop: a wall collapses a row or column |
 | `LEDGE` | the first ledge hop lands | each state's landing: a drop pins the row |
-| `OPEN` | about n tiles | each state n - k to n + k tiles on, k from `OpenLegError` |
+| `OPEN` | about n tiles | each state n - k to n + k tiles on, k from the error model |
 
-`OpenLegError(base=1, per=5)` allows `1 + n // 5` tiles of error (a
-parameter until the physics model measures it). A leg that may run into a
-door, off the loaded maps, onto unknown ground or into a person is refused,
-and so is an open leg over a ledge (the hop's time is fixed, so the hold
-would not match the tiles). `plan_belief(world, starts, goal, costs)` is A*
-over beliefs: each leg costs `per_leg` plus the path weights of its longest
-walk and most grass, plus `open_stop` if it ends in the open; beliefs larger
-than `max_spread` (5) are refused; the estimate is the longest single-state
-walk left to the goal. Each `PlannedLeg` carries its end kind and the belief
-after it, for the walker to check on arrival.
+A plan starts from one known tile (`plan_belief(world, start, goal, costs)`
+refuses a set): the bot clips to a wall or corner before planning, and with
+exact legs the position is known after each one (on BDSP, Route 203 planned
+in no time this way, where a search from a set of start tiles over Jubilife
+City took over a minute). The belief grows only at an open leg, by the error model
+`physics.model.TileError`: a leg of n tiles may miss by `per_tile * sqrt(n) +
+overshoot`, rounded to tiles. The default is the stick as measured on BDSP
+(0.15 tile a tile): holds up to 11 tiles land exactly, a 14-tile hold may
+miss by one. That spread must be absorbed by what follows: a wall or ledge
+leg, or a goal region wider than it (a 14-tile hold into a 4-wide street is
+accepted; into a 2-wide target the planner uses shorter, exact holds). A leg
+that may run into a door, off the loaded maps, onto unknown ground or into a
+person is refused, and so is an open leg over a ledge (the hop's time is
+fixed, so the hold would not match the tiles). The search is A* over
+beliefs: each leg costs `per_leg` plus the path weights of its longest walk
+and most grass, plus `open_stop` if it ends in the open; beliefs larger than
+`max_spread` (3, the most measured) are refused; the estimate is the longest
+single-state walk left to the goal. Each `PlannedLeg` carries its end kind
+and the belief after it, for the walker to check on arrival.
 
-Search time grows with the maps: Route 202 plans in well under a second,
-the story maps' 3 x 3 start to Sandgem's Pokemon Center in about a second,
-but Viridian City, Route 1 and Pallet Town together take minutes, so
-`routing.score` ranks given routes there rather than searching.
+Search time grows with the maps: Route 202 and the story maps plan in well
+under a second, but Viridian City, Route 1 and Pallet Town together take
+minutes, so `routing.score` ranks given routes there rather than searching.
