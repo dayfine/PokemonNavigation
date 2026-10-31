@@ -100,3 +100,24 @@ A `World` holds map files by name. A `Place` is `(map, tile)`.
 
 `movement.world_step` and `world_walk` apply the step rules across maps; a
 warp gives `Warped(state, facing)`.
+
+## Objects (`maps.objects`)
+
+Questions about the map file's NPCs, signs and points on a grid:
+
+- `sight_tiles(grid, npc)`: the line a trainer sees, up to `sight` tiles,
+  ending at a blocked cell (a ledge too) or another object;
+  `watched_tiles(map_file)` lists who sees each tile.
+- `reading_tile(sign)`, `can_read(sign, tile, facing)`: signs are read from
+  the tile in front of them, facing them.
+- `blocking_tiles(map_file, Blocking.NONE | STATIC | ALL)`: the tiles a router
+  treats as taken: none, NPCs that stand still, or also every tile of each
+  wanderer's patch.
+- `walls_around(grid, tile)` and `is_corner`: the directions that hold the
+  player on a tile. A corner (walls at right angles) is an anchor: two walks
+  end on it from anywhere nearby.
+
+`World.off_map_fraction(place, viewport)` is the black share of the screen
+around a place, counting connected maps as shown. A small room never fills
+the screen, so screen checks (battle detection, "stopped moving") must not
+assume a full-screen map. FRLG's viewport is `pokenav.games.frlg.VIEWPORT`.

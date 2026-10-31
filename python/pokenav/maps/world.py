@@ -21,7 +21,7 @@ so the tile past Route 1's (10, 0) is Viridian City's (22, height - 1):
 from typing import Dict, Iterable, NamedTuple, Optional
 
 from pokenav.geometry import Direction, Tile
-from pokenav.maps.model import Behavior, Cell, MapGrid
+from pokenav.maps.model import Behavior, Cell, MapGrid, Viewport
 from pokenav.maps.schema import Connection, MapFile
 
 #   The way a player walks out of a door they arrive through. Gen 3 and BDSP
@@ -71,6 +71,20 @@ class World:
         off that map."""
         map_file = self.maps.get(place.map)
         return map_file.grid.at(place.tile) if map_file else None
+
+    def shows(self, place: Place) -> bool:
+        """Whether the game draws a loaded map's tile at `place`: on its map,
+        or past an edge onto a connected map that is loaded."""
+        if self.at(place) is not None:
+            return True
+        across = self.across_edge(place)
+        return across is not None and self.at(across) is not None
+
+    def off_map_fraction(self, place: Place, viewport: Viewport) -> float:
+        """The share of the screen, 0 to 1, that shows no map (black) while
+        the player stands on `place`. Connected maps count as shown."""
+        window = [Place(place.map, tile) for tile in viewport.window(place.tile)]
+        return sum(1 for p in window if not self.shows(p)) / len(window)
 
     def connection_at(self, beyond: Place) -> Optional[Connection]:
         """The connection a tile just past an edge of its map lies across,
