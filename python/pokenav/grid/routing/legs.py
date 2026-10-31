@@ -20,10 +20,10 @@ import heapq
 import itertools
 from typing import AbstractSet, Dict, List, NamedTuple, Optional, Tuple
 
-from pokenav.geometry import CLOCKWISE, Direction
-from pokenav.maps.world import Place, World
-from pokenav.movement import FLAT, HOLDING_REASONS, Blocked, ElevationRules, WorldState, world_step
-from pokenav.routing.shortest import Costs, Goal, Move, MoveKind, as_move, move_cost
+from pokenav.grid.geometry import CLOCKWISE, Direction
+from pokenav.grid.maps.world import Place, World
+from pokenav.grid.movement import FLAT, HOLDING_REASONS, Blocked, ElevationRules, WorldState, world_step
+from pokenav.grid.routing.shortest import Costs, Goal, Move, MoveKind, as_move, move_cost
 
 
 class LegKind(enum.Enum):
