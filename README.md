@@ -27,12 +27,33 @@ AutoStory programs.
 
 | Path | What |
 |---|---|
-| `cpp/` | Core library, C++17, no dependencies: grid, physics model, planner, simulator. Meant to be vendored by bots. |
-| `python/` | Tools: map import (images, pret data), measurement analysis, plots, route drawing. |
-| `games/<game>/` | Per-game data: grids, measured physics parameters, landmarks. |
+| `python/pokenav/` | The library, Python 3.8+, standard library only: geometry, maps, movement, routing, and later physics, simulation and traces. Core modules know no game; game-specific code is in `pokenav/games/`. |
+| `python/tests/` | `unittest` tests, one file per module. |
+| `games/<game>/` | Per-game data: maps, named points, measured physics parameters. |
 | `measurements/` | Raw console measurements (what was pressed, what happened), so parameters can be refit. |
-| `docs/` | The mapping process and the physics to measure. |
+| `docs/` | The mapping process, the physics to measure, prior art, and the roadmap. |
+
+## Develop
+
+Needs only Python 3.8 or newer. From the repository root:
+
+```sh
+python3 -m unittest discover -s python/tests -t python          # all tests
+python3 -m unittest discover -s python/tests -t python -p 'test_package.py'  # one file
+```
+
+GitHub Actions runs the same command on Python 3.8 and 3.12 for every pull
+request (`.github/workflows/tests.yml`).
+
+Conventions:
+
+- Every module and class starts with a comment saying what it is for.
+- Numbers that mean something get a name and a note on where they come from.
+- Keep functions short and flat; split a long or deeply nested one.
+- Each command-line tool documents an example input, its output, and the
+  command that runs it.
 
 ## Status
 
-Starting. See [docs/ROADMAP.md](docs/ROADMAP.md).
+Building the Python library one small PR at a time. See
+[docs/ROADMAP.md](docs/ROADMAP.md).

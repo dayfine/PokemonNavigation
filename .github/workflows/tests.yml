@@ -1,0 +1,24 @@
+# Runs the Python unit tests on the oldest and newest supported Pythons.
+# 3.8 is what the lab Mac has; ubuntu-22.04 still ships a 3.8 build for
+# setup-python.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unittest:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run the tests
+        run: python -m unittest discover -v -s python/tests -t python
