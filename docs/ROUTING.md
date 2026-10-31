@@ -30,3 +30,27 @@ side, and down past the row-26 ledge) may run in another column than the
 drawn one: for the shortest path every column there costs the same, and the
 choice is left to the robust planner and scoring. The test needs a
 pokefirered checkout (`POKEFIRERED_DIR`).
+
+## Legs (`routing.legs`)
+
+A bot walks in legs: hold one direction until it has gone far enough or
+something stops it. A `Leg` has a direction, the tiles it walks (a hop counts
+2), whether it ends `to_wall` (holding on keeps the player there) and
+whether it ends in a warp. A `FACE` leg turns without moving.
+
+- `join_legs(world, start, moves)` groups a path's moves into legs; a warp
+  ends its leg.
+- `plan_legs(world, start, goal, start_facing, goal_facing, costs)` searches
+  like `shortest_path` over (place, facing, mid-leg) and adds
+  `LegCosts.open_stop` (default 8) for each leg that ends where the player
+  could keep going. So of two equal paths it takes the one whose legs end at
+  walls, and it adds a face leg when the goal needs a facing.
+
+A person is not a wall (they may walk off), a door or a map edge to an
+unloaded map is not either; see `docs/MOVEMENT.md`.
+
+The leg planner alone does not reproduce Route 1's drawn line: with
+`open_stop` 8 it ends a leg on the wall at (7, 24) and cuts through 5 more
+grass tiles, because the drawn line's legs mostly end in the open. What
+makes those legs safe is that each ledge drop pins the row, which the
+belief-set planner models.
