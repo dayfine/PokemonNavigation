@@ -20,9 +20,9 @@ leg that spreads the belief past `max_spread`.
 
 from typing import Dict, Iterable, List, Optional, Tuple
 
-from pokenav.geometry import CLOCKWISE
-from pokenav.movement import WorldState
-from pokenav.routing.belief import Belief, BeliefPlanner, PlannedLeg
+from pokenav.grid.geometry import CLOCKWISE
+from pokenav.grid.movement import WorldState
+from pokenav.grid.routing.belief import Belief, BeliefPlanner, PlannedLeg
 
 #   The most legs a localizing sequence may have by default: a corner takes
 #   two, a corner behind an obstacle three.

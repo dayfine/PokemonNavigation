@@ -1,15 +1,15 @@
-"""Tests for pokenav.routing.localize: synchronizing a room, a corridor and
+"""Tests for pokenav.grid.routing.localize: synchronizing a room, a corridor and
 a region with no such sequence, and the robust planner inserting one."""
 
 import unittest
 
-from pokenav.geometry import Direction, Tile
-from pokenav.maps.objects import is_corner
-from pokenav.maps.textgrid import parse
-from pokenav.maps.world import Place, World
-from pokenav.movement import WorldState
-from pokenav.routing.belief import BeliefCosts, BeliefPlanner, LegEnd
-from pokenav.routing.localize import anchor, synchronize, use_localization
+from pokenav.grid.geometry import Direction, Tile
+from pokenav.grid.maps.objects import is_corner
+from pokenav.grid.maps.textgrid import parse
+from pokenav.grid.maps.world import Place, World
+from pokenav.grid.movement import WorldState
+from pokenav.grid.routing.belief import BeliefCosts, BeliefPlanner, LegEnd
+from pokenav.grid.routing.localize import anchor, synchronize, use_localization
 
 N, E, S, W = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 
