@@ -76,7 +76,8 @@
     {"text": "45 walkable tiles not connected to (20, 26) are unknown: they are other components of the game map (one map, one connected component)", "source": "generator"},
     {"text": "Tile (x, y) is world (160 + x, 672 + y) of pokediamond's matrix 0. The image-traced file this replaces had 12 px rows for 16 px columns, so its rows do not map one to one onto these: its row 23 (CAVE_EXIT) is row 26 here, its row 6 (the twins) row 7.", "source": "decomp comparison, 2026-10-31"},
     {"text": "Console-verified: the cave exit warp tile at (20, 26) (the image file's CAVE_EXIT); the twins at (15, 7) and (16, 7) seen from the image file's (14..15, 6).", "source": "console (lab B)"},
-    {"text": "Issue #28 reports one wall column on Route 204 North that differs between BDSP and the decomp; which column was not written down. Measure before a route depends on the columns here.", "source": "console (lab B) vs decomp"},
+    {"text": "BDSP differs from the decomp: column 23, rows 12..19 (the grass block's east column, open in both decomps) is a wall in BDSP: a walk north on column 23 from row 19 towards row 13 moved 0 tiles twice (Arduino-Source lab run r242a, 2026-10-31).", "source": "console (lab B) vs decomp"},
+    {"text": "BDSP differs from the decomp: a tap north from (12, 6) was blocked twice (run r248a, 2026-10-31); the tile north of it, (12, 5), is tall grass in both decomps.", "source": "console (lab B) vs decomp"},
     {"text": "The ledge at (10..12, 15) is three wide (the image file had two). The Cut tree at (21, 6) blocks the way to the pocket (21..31, 4..5) and the east edge until cut; the item balls at (2, 10) and (20, 23) block their tiles until picked up.", "source": "decomp, read by hand"},
     {"text": "Exits: north (10..12, 0) and (8, 0) to Floaroma Town; south (10..12, 31) to Route 204 South (the cliff: not walkable, the two halves join only through the Ravaged Path, #27).", "source": "decomp, read by hand"}
   ]
