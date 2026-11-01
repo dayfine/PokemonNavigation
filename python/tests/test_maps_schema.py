@@ -48,6 +48,7 @@ class LoadTest(unittest.TestCase):
         self.assertEqual((town.warps[0].to_map, town.warps[0].to_warp), ("Tiny Mart", 0))
         self.assertEqual(town.connections[0].offset, -4)
         self.assertEqual(town.notes[0].source, "console")
+        self.assertEqual((town.source, town.status), ("drawn for the docs", "example only"))
         self.assertEqual(town.image, MapImage("tiny_town.png", 8, 0, 16))
         self.assertEqual(town.encounters, frozenset())
 
@@ -55,7 +56,8 @@ class LoadTest(unittest.TestCase):
         town = schema.from_json(minimal(["#.", ".#"]))
         self.assertEqual(town.grid.rows(), [[WALL, OPEN], [OPEN, WALL]])
         self.assertEqual((town.points, town.npcs, town.game), ([], [], ""))
-        self.assertIsNone(town.encounters)
+        self.assertEqual((town.source, town.status), ("", ""))
+        self.assertEqual(town.encounters, frozenset())
         with self.assertRaises(KeyError):
             town.point("NOWHERE")
 
@@ -113,8 +115,16 @@ class EncountersTest(unittest.TestCase):
         possible = [wild_battle_possible(cave, Tile(x, 0)) for x in range(3)]
         self.assertEqual(possible, [False, True, True])
 
-    def test_unknown_when_the_map_does_not_say_or_off_the_map(self):
+    def test_a_file_without_the_key_gets_what_its_cells_imply(self):
         plain = schema.from_json(minimal([".."]))
+        self.assertEqual(plain.encounters, frozenset())
+        self.assertIs(wild_battle_possible(plain, Tile(0, 0)), False)
+        route = schema.from_json(minimal(['."~'], legend=dict(GRASS_LEGEND, **WATER_LEGEND)))
+        self.assertEqual(route.encounters, {Encounter.GRASS, Encounter.WATER})
+        self.assertEqual(schema.implied_encounters(route.grid), route.encounters)
+
+    def test_unknown_when_the_map_is_built_without_saying_or_off_the_map(self):
+        plain = MapFile(GridMap2D("plain", [[OPEN]]))
         self.assertIsNone(wild_battle_possible(plain, Tile(0, 0)))
         cave = schema.from_json(minimal([".."], encounters=["cave"]))
         self.assertIsNone(wild_battle_possible(cave, Tile(5, 0)))
@@ -144,6 +154,17 @@ class DumpTest(unittest.TestCase):
             "legend": {"#": {"blocked": True}, ".": {}},
             "rows": ["#."],
         })
+
+    def test_source_status_and_rock_round_trip(self):
+        legend = {"#": WALL, ".": OPEN, "R": Cell(blocked=True, behavior=Behavior.ROCK)}
+        data = minimal([".R#"], legend={"#": {"blocked": True}, ".": {}, "R": {"blocked": True, "behavior": "rock"}},
+                       source="pret/pokediamond", status="console checks pending")
+        cave = schema.from_json(data)
+        self.assertEqual((cave.source, cave.status), ("pret/pokediamond", "console checks pending"))
+        self.assertEqual(cave.grid.at(Tile(1, 0)), Cell(blocked=True, behavior=Behavior.ROCK))
+        written = schema.to_json(cave, legend)
+        self.assertEqual((written["source"], written["status"]), ("pret/pokediamond", "console checks pending"))
+        self.assertEqual(schema.loads(schema.dumps(cave, legend)), cave)
 
     def test_cell_without_a_character(self):
         grid = GridMap2D("pond", [[Cell(blocked=True, behavior=Behavior.WATER)]])
