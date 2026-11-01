@@ -11,6 +11,7 @@ The standard legend:
     v ^ < >  ledges, crossed south / north / west / east
     D  door (walk into)   W  warp (step onto)   S  sign
     ~  water              =  counter            i  ice
+    R  rock (Rock Smash opens it)
     2 8 4 6  forced move south / north / west / east (as on a keypad)
     ?  unknown: off the map, or not checked yet
     N  an NPC standing on open ground (an object, not a cell)
@@ -34,7 +35,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from pokenav.grid.geometry import Direction, Tile
 from pokenav.grid.maps.model import OPEN, Behavior, Cell, GridMap2D
-from pokenav.grid.maps.schema import MapFile, NamedPoint, Npc
+from pokenav.grid.maps.schema import MapFile, NamedPoint, Npc, implied_encounters
 
 
 class Legend:
@@ -112,6 +113,7 @@ STANDARD = Legend(
         ("S", Cell(blocked=True, behavior=Behavior.SIGN)),
         ("~", Cell(blocked=True, behavior=Behavior.WATER)),
         ("=", Cell(blocked=True, behavior=Behavior.COUNTER)),
+        ("R", Cell(blocked=True, behavior=Behavior.ROCK)),
         ("i", Cell(behavior=Behavior.ICE)),
         ("2", Cell(behavior=Behavior.FORCED_SOUTH)),
         ("8", Cell(behavior=Behavior.FORCED_NORTH)),
@@ -142,7 +144,8 @@ def parse(text: str, legend: Legend = STANDARD, name: str = "") -> MapFile:
         cells = _with_elevation(cells, elevation)
     points = [NamedPoint(m.group(1), Tile(int(m.group(2)), int(m.group(3))))
               for m in map(_POINT.match, lines) if m]
-    return MapFile(grid=GridMap2D(name, cells), points=points, npcs=npcs)
+    grid = GridMap2D(name, cells)
+    return MapFile(grid=grid, encounters=implied_encounters(grid), points=points, npcs=npcs)
 
 
 def _find_name(lines: Iterable[str]) -> str:

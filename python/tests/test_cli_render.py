@@ -22,6 +22,7 @@ class ParseTileTest(unittest.TestCase):
 
 class CommandLineTest(unittest.TestCase):
     MAP = os.path.join(REPO, "games", "bdsp", "maps", "route_202.json")
+    TOWN = os.path.join(REPO, "docs", "examples", "tiny_town.json")
 
     def run_main(self, *argv):
         out = io.StringIO()
@@ -30,26 +31,26 @@ class CommandLineTest(unittest.TestCase):
         return out.getvalue()
 
     def test_text(self):
-        out = self.run_main(self.MAP, "--path", "19,22", "30,22", "30,19", "--region", "29,19", "30,19")
-        self.assertEqual(out.splitlines()[19], "###,,,,##.....########.......oX#####")
-        self.assertEqual(out.splitlines()[22], "###,,,,,,......,,,,@***********#####")
+        out = self.run_main(self.MAP, "--path", "18,27", "29,27", "29,24", "--region", "28,24", "29,24")
+        self.assertEqual(out.splitlines()[24], "##,,,,##.....########.......oX##")
+        self.assertEqual(out.splitlines()[27], "##,,,,,,......,,,,@***********##")
 
     def test_picture_without_an_image(self):
         with tempfile.TemporaryDirectory() as tmp:
             out_path = os.path.join(tmp, "route.png")
-            self.run_main(self.MAP, "--path", "19,22", "30,22", "--out", out_path)
+            self.run_main(self.MAP, "--path", "18,27", "29,27", "--out", out_path)
             image = Image.read(out_path)
-        self.assertEqual((image.width, image.height), (36 * 16, 26 * 16))
+        self.assertEqual((image.width, image.height), (32 * 16, 32 * 16))
 
     def test_picture_over_an_image(self):
         with tempfile.TemporaryDirectory() as tmp:
             picture = os.path.join(tmp, "map.png")
-            Image(592, 416, BACKGROUND).write(picture)
+            Image(64, 32, BACKGROUND).write(picture)
             out_path = os.path.join(tmp, "route.png")
-            self.run_main(self.MAP, "--path", "19,22", "30,22", "--image", picture, "--out", out_path)
+            self.run_main(self.TOWN, "--path", "0,1", "2,1", "--image", picture, "--out", out_path)
             image = Image.read(out_path)
-        #   Route 202's picture puts tile (x, y) at pixel (8 + 16x, 16y).
-        self.assertEqual(image.get(8 + 25 * 16 + 8, 22 * 16 + 8), render.LEG_COLORS[0])
+        #   Tiny Town's picture puts tile (x, y) at pixel (8 + 16x, 16y).
+        self.assertEqual(image.get(8 + 1 * 16 + 8, 1 * 16 + 8), render.LEG_COLORS[0])
 
 
 if __name__ == "__main__":

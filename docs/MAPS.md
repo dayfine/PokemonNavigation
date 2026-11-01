@@ -14,8 +14,9 @@ A map is a grid of cells, row 0 at the top, x east and y south. Each cell has:
 
 Behaviors: `none`, `ledge_north|east|south|west` (crossed one way, with a
 hop), `door` (walk into it to warp), `warp` (step onto it to warp), `water`,
-`tall_grass`, `sign`, `counter`, `ice`, `forced_north|east|south|west`, and
-`unknown` (not mapped; may be an exit, so neither a wall nor walkable).
+`tall_grass`, `sign`, `counter`, `rock` (a wall Rock Smash clears), `ice`,
+`forced_north|east|south|west`, and `unknown` (not mapped; may be an exit,
+so neither a wall nor walkable).
 
 A tile off the grid has no cell; the map says which edge it lies past, and the
 world (maps joined by connections) decides what is there.
@@ -37,7 +38,8 @@ named records for what is on the map:
 | Key | Holds |
 |---|---|
 | `format`, `name`, `game` | `"pokenav-map/1"`, the map's name, the game it is from |
-| `encounters` | where wild battles start: a list of `grass`, `water`, `cave` (every walkable tile); `[]` for none (towns, buildings, gyms); absent if unknown |
+| `source`, `status` | free text: where the cells come from (a decompilation and its commit, an image, console runs) and how far they are trusted (which console checks back them, which checkpoints pass on them) |
+| `encounters` | where wild battles start: a list of `grass`, `water`, `cave` (every walkable tile); `[]` for none (towns, buildings, gyms); absent, the cells decide (`grass` if there is tall grass, `water` if there is water; a cave must say so) |
 | `legend` | character → `{"blocked": bool, "behavior": name}`; both optional |
 | `rows`, `elevation` | the cells, top row first; elevation defaults to 0 |
 | `points` | named tiles (`name`, `tile`, `proof`: how a walk proves it is there) |
@@ -70,6 +72,7 @@ The legend is one two-way table between characters and cell kinds
 | `D` | door (walk into) | `W` | warp (step onto) |
 | `S` | sign | `~` | water |
 | `=` | counter | `i` | ice |
+| `R` | rock (Rock Smash opens it) | | |
 | `2 8 4 6` | forced move S / N / W / E | `?` | unknown |
 | `N` | an NPC on open ground (an object; the cell under it is `.`) | | |
 
@@ -154,35 +157,97 @@ as read facing north; door mats (arrow warps) fire on the step onto them,
 while the game fires them on a press of their direction while standing on
 them.
 
+## Sinnoh decomp import (`decomp`, `cli.decomp`)
+
+The DS Sinnoh games' maps are generated from pret/pokediamond or
+pret/pokeplatinum, read from a local checkout (or a copy with the same
+relative paths; pret data is not committed). `decomp.landdata` decodes a
+land data file (a 16-byte header, then 1024 u16 tile attributes for a
+32 x 32 cell: bit 0x8000 blocks, the low byte is the behavior) and the map
+matrix that places cells in the world (world tile (x, z) is in cell
+(z // 32, x // 32)); `decomp.events` reads the objects, warps and sign
+events (Platinum's JSON or Diamond's binary records); `decomp.repos` knows
+each repository's paths and names Diamond's numbered sprites and maps from
+its constants; `decomp.generate` turns a selection of matrix cells into a
+map file:
+
+- cells from the attributes: tall grass, water (always a wall to a walker),
+  ledges by direction, doors and cave mouths (walked into), warp tiles
+  (stood on), ice and forced moves; signposts become `sign` cells and sign
+  records, Rock Smash rocks `rock` cells; item balls, Strength boulders and
+  Cut trees are standing objects (they block until removed); people are
+  NPCs with facing (from `LOOK_*`), sight (trainers) and wander rectangles
+  (from the movement ranges); objects a story flag hides go into a note;
+- warps, and connections from the matrix cells past each edge, assuming
+  each neighbour is generated whole (cell (0, 0) at its top-left);
+- `encounters` from the tiles (grass, water, cave floor); `source`, a note
+  and `status` naming the repository, commit and files.
+
+Simplifications: one-way blocks are plain ground and two-tile ledges plain
+ledges (both listed in a note); heights live in the land data's BDHC blob,
+not per tile, so elevation is 0; a tile the loaded cells do not cover is
+`unknown`. `--component x,z` keeps only the walkable component holding a
+world tile and turns the rest unknown, so a game map with two walkable
+regions becomes two map files (one map, one connected component; ledges and
+rocks join tiles, water does not). `--keep old.json` carries a hand-edited
+file's points, buildings, notes, status and NPC names over.
+
+```sh
+PYTHONPATH=python python3 -m pokenav.cli.decomp --repo ~/pokediamond --source pokediamond \
+    --name "Route 204 South" --cells 22,5 --events 330 --component 171,705 \
+    --keep games/bdsp/maps/route_204_south.json --out games/bdsp/maps/route_204_south.json
+# wrote games/bdsp/maps/route_204_south.json (32 x 32), 1 walkable component
+```
+
+Cells are matrix (row, col); the events file is a narc number for Diamond
+(the zone events column of `arm9/src/map_header.c`) or a stem for Platinum
+(`route_204_south` for `res/field/events/events_route_204_south.json`).
+Diamond is the source for BDSP, which keeps Diamond/Pearl's layout; the
+story maps' land data is byte-identical between Diamond and Platinum apart
+from Jubilife's Global Trade Station block.
+
 ## BDSP maps (`games/bdsp/`, `games.bdsp`)
 
-The story's first maps, read from Bulbapedia's DP maps and checked on the
-console, are map files in `games/bdsp/maps/`: Route 201, Sandgem Town,
-Route 202 and Jubilife City. Each file's notes say how its grid was read and
-what was measured. `games.bdsp.story_world()` joins Route 201, Sandgem Town
-and Route 202; Jubilife City stays on its own until its stairs are mapped.
-Standing NPCs are walls in these worlds: on the console a standing trainer
-stops a held walk.
+The story's first maps are generated from pret/pokediamond and are map files
+in `games/bdsp/maps/`: Route 201, Sandgem Town, Route 202, Jubilife City,
+Route 203, Route 204 South, the Ravaged Path and Route 204 North. Each
+file's `source` names the commit and files, its `status` which console
+checks back it, and its notes carry the console-verified anchors and the
+known differences between BDSP and the decomp (the Route 201 Potion giver
+wanders in BDSP; one-row and one-column questions on Sandgem Town, Route
+202, Jubilife and Route 203; a wall column on Route 204 North) as notes,
+not patches. Route 204 is two maps because its halves meet only through
+the Ravaged Path. The grids traced from Bulbapedia's DP images before
+(12 px rows for 16 px columns) are replaced; their console facts were
+translated into these frames.
 
-`games/bdsp/wall_hits.json` lists measured walks (start, direction, where the
-player stopped, tiles, held or not) and where the maps join; the tests check
-the maps against every entry. Add a measurement there when a walk on the
-console disagrees with the map, then fix the map file.
+`games.bdsp.story_world()` joins all eight at their edges and through the
+cave's doors. Standing NPCs are walls in these worlds: on the console a
+standing trainer stops a held walk.
+
+`games/bdsp/wall_hits.json` lists measured walks (start, direction, where
+the player stopped, tiles, held or not), where the maps join, which doors
+warp where, and `pending` measurements the decomp does not reproduce; the
+tests check the maps against every entry but the pending ones. Add a
+measurement there when a walk on the console disagrees with the map, then
+fix the map file or record the difference in its notes.
 
 ## Drawing routes (`maps.render`)
 
-Routes, legs and belief sets are drawn on the map's own picture (the
-Bulbapedia map), lined up by the map file's `image` entry; ASCII is for
-tests and terminals. Images are not committed: download the one named in the
-map file's `image.source`. The command line is `pokenav.cli.render`:
+Routes, legs and belief sets are drawn on the map's own picture, lined up
+by the map file's `image` entry, or in flat colors for a map without one;
+ASCII is for tests and terminals. Images are not committed: download the one
+named in the map file's `image.source`. The BDSP maps have no `image`: the
+Bulbapedia DP maps have 12 px rows for 16 px columns, so they cannot be
+lined up with a tile grid. The command line is `pokenav.cli.render`:
 
 ```sh
 # text
 PYTHONPATH=python python3 -m pokenav.cli.render games/bdsp/maps/route_202.json \
     --path 19,22 30,22 30,19 --region 29,19 30,19
-# over the picture
-PYTHONPATH=python python3 -m pokenav.cli.render games/bdsp/maps/route_202.json \
-    --path 19,22 30,22 30,19 --image Sinnoh_Route_202_DP.png --out route.png
+# over the picture (a map file with an image entry)
+PYTHONPATH=python python3 -m pokenav.cli.render docs/examples/tiny_town.json \
+    --path 0,1 2,1 --image tiny_town.png --out town.png
 ```
 
 `--path` takes waypoints; each consecutive pair is one straight leg. Legs are

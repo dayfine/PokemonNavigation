@@ -9,6 +9,8 @@ reads like a picture; everything else is a named record:
       "format": "pokenav-map/1",
       "name": "Tiny Town",
       "game": "example",
+      "source": "drawn for the docs",
+      "status": "example only",
       "encounters": [],
       "legend": {
         "#": {"blocked": true},
@@ -31,8 +33,11 @@ reads like a picture; everything else is a named record:
     }
 
 "image" says where the map's picture is and where the grid sits on it, for
-drawing routes over it (`maps.render`). Only "format", "name", "legend" and
-"rows" are required. "elevation" is one
+drawing routes over it (`maps.render`). "source" says where the cells come
+from (an image, a decompilation, console runs) and "status" how far they
+are trusted (which console checks back them, which checkpoints pass on
+them); both are free text. Only "format", "name", "legend" and "rows" are
+required. "elevation" is one
 hex digit (0 to F) per tile and defaults to all 0. A legend entry gives a
 cell's `blocked` (default false) and `behavior` (default "none"); its
 elevation comes from the elevation rows. The legend is the file's own, so a
@@ -41,10 +46,12 @@ file can use any characters; `maps.textgrid` has the standard one.
 "encounters" says where wild battles can start, so a walker can tell a wild
 battle (run) from a trainer's (fight): a list of "grass" (on tall grass
 cells), "water" (on water, while surfing) and "cave" (on every walkable
-tile). An empty list is a map with none (a town, a building, a gym); a file
-without the key does not say. A map that lists encounters must list those of
-its cells: tall grass needs "grass" and water needs "water".
-`wild_battle_possible(map_file, tile)` applies it to one tile.
+tile). An empty list is a map with none (a town, a building, a gym). A file
+without the key gets the kinds its cells imply: "grass" if it has tall
+grass, "water" if it has water; a cave must say "cave" itself. A map that
+lists encounters must list those of its cells: tall grass needs "grass" and
+water needs "water". `wild_battle_possible(map_file, tile)` applies it to
+one tile.
 
 The example above is docs/examples/tiny_town.json:
 
@@ -187,11 +194,15 @@ class MapImage:
 
 @dataclass
 class MapFile:
-    """Everything a map file holds. `encounters` is None when the file does
-    not say where wild battles start, and empty for a map with none."""
+    """Everything a map file holds. `encounters` is None only for a map built
+    in code without saying where wild battles start; a loaded file always
+    has it (derived from the cells if the file left it out), empty for a map
+    with none."""
 
     grid: GridMap2D
     game: str = ""
+    source: str = ""
+    status: str = ""
     encounters: Optional[FrozenSet[Encounter]] = None
     points: List[NamedPoint] = field(default_factory=list)
     npcs: List[Npc] = field(default_factory=list)
@@ -291,6 +302,8 @@ def from_json(data: Dict[str, Any]) -> MapFile:
     return MapFile(
         grid=grid,
         game=data.get("game", ""),
+        source=data.get("source", ""),
+        status=data.get("status", ""),
         encounters=encounters,
         points=[_point_from_json(p) for p in data.get("points", [])],
         npcs=[_npc_from_json(n) for n in data.get("npcs", [])],
@@ -309,6 +322,10 @@ def to_json(map_file: MapFile, legend: Legend) -> Dict[str, Any]:
     data: Dict[str, Any] = {"format": FORMAT, "name": map_file.name}
     if map_file.game:
         data["game"] = map_file.game
+    if map_file.source:
+        data["source"] = map_file.source
+    if map_file.status:
+        data["status"] = map_file.status
     if map_file.encounters is not None:
         data["encounters"] = [kind.value for kind in Encounter if kind in map_file.encounters]
     data.update(_grid_to_json(map_file.grid, legend))
@@ -329,10 +346,18 @@ def to_json(map_file: MapFile, legend: Legend) -> Dict[str, Any]:
 
 #   ---- encounters ----
 
-def _encounters_from_json(value: Optional[List[str]], grid: GridMap2D) -> Optional[FrozenSet[Encounter]]:
-    """The encounter kinds a file lists, checked against its cells."""
+def implied_encounters(grid: GridMap2D) -> FrozenSet[Encounter]:
+    """The encounter kinds a grid's cells imply: grass if it has tall grass,
+    water if it has water. Caves are not told by their cells."""
+    present = {cell.behavior for row in grid.rows() for cell in row}
+    return frozenset(kind for kind, behavior in ENCOUNTER_BEHAVIOR.items() if behavior in present)
+
+
+def _encounters_from_json(value: Optional[List[str]], grid: GridMap2D) -> FrozenSet[Encounter]:
+    """The encounter kinds a file lists, checked against its cells; the kinds
+    its cells imply if the file has no "encounters" key."""
     if value is None:
-        return None
+        return implied_encounters(grid)
     kinds = frozenset(Encounter(name) for name in value)
     present = {cell.behavior for row in grid.rows() for cell in row}
     for kind, behavior in ENCOUNTER_BEHAVIOR.items():

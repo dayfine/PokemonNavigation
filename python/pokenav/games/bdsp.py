@@ -1,14 +1,15 @@
-"""Pokemon Brilliant Diamond / Shining Pearl: the console-checked maps and
-how they join.
+"""Pokemon Brilliant Diamond / Shining Pearl: the story maps and how they
+join.
 
-BDSP's movement is analog, but the story maps so far are walked as a tile
-grid read from Bulbapedia's DP maps and checked on the console. The map
-files are in games/bdsp/maps/; each records in its notes what was measured.
+BDSP's movement is analog, but the story maps are walked as a tile grid.
+The grids are generated from pret/pokediamond (`pokenav.cli.decomp`), whose
+land data BDSP keeps, and checked on the console; the map files are in
+games/bdsp/maps/, and each one's `status` and notes say what was checked.
 A standing NPC stops a held walk like a wall on the console (Route 202's
 trainer_a), so the worlds here turn standing NPCs into walls.
 
-    world = story_world()        # Route 201, Sandgem Town and Route 202, joined
-    world.across_edge(Place("Route 202", Tile(30, 26)))
+    world = story_world()        # Route 201 to the Ravaged Path, joined
+    world.across_edge(Place("Route 202", Tile(29, 32)))
     # Place(map='Sandgem Town', tile=Tile(x=29, y=0))
 
 Measured walks to check the maps against are in games/bdsp/wall_hits.json.
@@ -33,10 +34,16 @@ MAP_FILES = {
     "Sandgem Town": "sandgem_town.json",
     "Route 202": "route_202.json",
     "Jubilife City": "jubilife_city.json",
+    "Route 203": "route_203.json",
+    "Route 204 South": "route_204_south.json",
+    "Ravaged Path": "ravaged_path.json",
+    "Route 204 North": "route_204_north.json",
 }
 
-#   The maps of the story's first stretch, joined at their edges.
-STORY_MAPS = ["Route 201", "Sandgem Town", "Route 202"]
+#   The maps of the story's first stretch, joined at their edges and through
+#   the Ravaged Path's doors. Route 204 is two maps: its halves meet only
+#   through the cave (one map, one connected component).
+STORY_MAPS = list(MAP_FILES)
 
 
 def load_map(name: str) -> MapFile:
@@ -51,8 +58,3 @@ def world_of(names: List[str]) -> World:
 
 def story_world() -> World:
     return world_of(STORY_MAPS)
-
-
-def jubilife_world() -> World:
-    """Jubilife City on its own: its stairs to Route 202 are not mapped yet."""
-    return world_of(["Jubilife City"])

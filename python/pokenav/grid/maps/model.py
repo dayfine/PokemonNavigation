@@ -46,6 +46,8 @@ class Behavior(enum.Enum):
     SIGN = "sign"
     #   Blocks; someone behind it can be talked to across it.
     COUNTER = "counter"
+    #   A rock Rock Smash clears: a wall until it is smashed.
+    ROCK = "rock"
     #   The player slides until something stops them.
     ICE = "ice"
     #   The player is moved in a fixed direction once on it.

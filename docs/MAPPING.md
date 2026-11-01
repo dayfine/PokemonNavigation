@@ -2,6 +2,21 @@
 
 Moved from Arduino-Source devtools/maps (fork PR #83).
 
+## Where a grid comes from
+
+For a game with a decompilation the grid is generated, not drawn:
+`pokenav.cli.decomp` reads pret/pokediamond (for BDSP) or pret/pokeplatinum,
+and `pokenav.cli.import_frlg` reads pret/pokefirered (docs/MAPS.md). The
+decomp gives the collision, behaviors, objects, warps and connections
+exactly; the console then checks the differences the remake made (BDSP's
+Route 201 Potion giver wanders; the decomp has her standing still), which
+go into the map file's notes. Tracing a grid from a map image is the
+fallback for maps no decomp covers. It needs care: Bulbapedia's DP maps
+have 12 px rows for 16 px columns and paint cliffs taller than their tiles,
+so a grid traced from them has every vertical leg 25-35% short and no
+single offset fixes it (the 2026-10-31 comparison of the image-traced BDSP
+grids against pokeplatinum).
+
 ## Map, route, walk: getting a route to work on the console
 
 A route that fails on the console has failed in one of three layers. Find
@@ -24,7 +39,7 @@ which one before changing anything, and fix that layer:
 
 ### Measuring a map
 
-The images above give a first grid. Before a route depends on it, measure it
+The decomp (or, failing that, an image) gives a first grid. Before a route depends on it, measure it
 with the Command File Runner's `walk x y`, which holds the stick until the
 screen stops changing and prints how long it moved. Don't use timed `stick`
 holds for this: on BDSP the same 300 ms hold moved one row on one try and two

@@ -2,7 +2,9 @@
   "format": "pokenav-map/1",
   "name": "Sandgem Town",
   "game": "bdsp",
-  "encounters": ["water"],
+  "source": "pret/pokediamond@b623abe: files/fielddata/land_data/land_data_release/narc_0007.bin, files/fielddata/mapmatrix/map_matrix/narc_0000.bin, files/fielddata/eventdata/zone_event_release/narc_0396.bin",
+  "status": "generated from the decomp; console-verified: the three doors and the two signs on row 10, the lab sign (5, 11), the stops above the Mart and the Center (one-row question at (29, 5)); other checks pending",
+  "encounters": [],
   "legend": {
     "#": {"blocked": true},
     ".": {},
@@ -10,57 +12,80 @@
     "S": {"blocked": true, "behavior": "sign"}
   },
   "rows": [
-    "####################..........####",
-    "####################..........####",
-    "####################..........####",
-    "####################......########",
-    "####################......########",
-    "####################......########",
-    "########D###..###D##S....S#D######",
-    ".....S........................####",
-    "..............................####",
-    "..............................####",
-    "######.........#####..........####",
-    "######.........#####..........####",
-    "##########.....#####..........####",
-    "##########.....#####..........####",
-    "##########.....#####..........####",
-    "#######D##....S#D###..S.......####",
-    "######........................####",
-    "######........................####",
-    "######....................########",
-    "####################......########",
-    "####################......########",
-    "####################......########",
-    "####################......########"
+    "########################......##",
+    "########################......##",
+    "####################..........##",
+    "####################..........##",
+    "####################..........##",
+    "####################..........##",
+    "####################......######",
+    "####################......######",
+    "####################......######",
+    "####################......######",
+    "########D##....##D##S....S#D####",
+    ".....S........................##",
+    "..............................##",
+    "..............................##",
+    "..............................##",
+    "..............................##",
+    "######........................##",
+    "######........................##",
+    "######.........#####..........##",
+    "##########.....#####..........##",
+    "##########.....#####..........##",
+    "##########.....#####..........##",
+    "#######D##....S#D###..S.......##",
+    "######........................##",
+    "######........................##",
+    "######........................##",
+    "######....................######",
+    "####################......######",
+    "####################......######",
+    "####################......######",
+    "####################......######",
+    "####################......######"
   ],
   "points": [
-    {"name": "ABOVE_MART", "tile": [29, 2], "proof": "walking south from Route 202 (30, 22) stops here"},
-    {"name": "ABOVE_POKEMON_CENTER", "tile": [20, 2], "proof": "walking west from ABOVE_MART stops here"},
-    {"name": "POKEMON_CENTER_SIGN", "tile": [20, 6], "proof": "walking south from (20, 2) stops at (20, 5), above it"}
+    {"name": "ABOVE_MART", "tile": [29, 5], "proof": "walking south from Route 202 (29, 27) stops here, where the road narrows; the image frame put the stop one row further south, which the decomp has blocked; the 9-tile walk west fits this row"},
+    {"name": "ABOVE_POKEMON_CENTER", "tile": [20, 5], "proof": "walking west from ABOVE_MART stops here"},
+    {"name": "POKEMON_CENTER_SIGN", "tile": [20, 10], "proof": "walking south from (20, 5) stops at (20, 9), above it"}
+  ],
+  "npcs": [
+    {"name": "boy2", "tile": [27, 23], "wander": {"low": [26, 22], "high": [28, 24]}, "note": "BOY2, WANDER_AROUND"},
+    {"name": "man1", "tile": [11, 22], "facing": "south", "note": "MAN1, LOOK_AROUND"},
+    {"name": "woman1", "tile": [23, 20], "facing": "south", "note": "WOMAN1, LOOK_SOUTH_AND_WEST"}
+  ],
+  "signs": [
+    {"name": "signboard_1", "tile": [5, 11], "facing": "north", "note": "SIGNBOARD"},
+    {"name": "signboard_2", "tile": [14, 22], "facing": "north", "note": "SIGNBOARD"},
+    {"name": "map_signpost", "tile": [22, 22], "facing": "north", "note": "MAP_SIGNPOST"},
+    {"name": "signboard_3", "tile": [20, 10], "facing": "north", "note": "SIGNBOARD"},
+    {"name": "signboard_4", "tile": [25, 10], "facing": "north", "note": "SIGNBOARD"}
   ],
   "buildings": [
-    {"name": "Professor Rowan's Lab", "kind": "lab", "door": [8, 6], "note": "door between the two front windows, pixel (144, 110)"},
-    {"name": "Pokemon Center", "kind": "pokecenter", "door": [17, 6], "note": "glass door, pixel (288, 104)"},
-    {"name": "Poke Mart", "kind": "mart", "door": [27, 6], "note": "pixel (448, 104)"}
+    {"name": "Professor Rowan's Lab", "kind": "lab", "door": [8, 10], "note": "between the two front windows"},
+    {"name": "Pokemon Center", "kind": "pokecenter", "door": [17, 10]},
+    {"name": "Poke Mart", "kind": "mart", "door": [27, 10]}
+  ],
+  "warps": [
+    {"tile": [27, 10], "to_map": "Sandgem Pokemart", "to_warp": 0},
+    {"tile": [17, 10], "to_map": "Sandgem Pokecenter 1F", "to_warp": 0},
+    {"tile": [8, 10], "to_map": "Sandgem Rowans Lab", "to_warp": 0},
+    {"tile": [16, 22], "to_map": "Sandgem Professor Assistant House 1F", "to_warp": 0},
+    {"tile": [7, 22], "to_map": "Sandgem Southwest House", "to_warp": 0}
   ],
   "connections": [
-    {"direction": "west", "map": "Route 201", "offset": 3},
-    {"direction": "north", "map": "Route 202", "offset": -1},
-    {"direction": "south", "map": "Route 219", "offset": 0}
+    {"direction": "north", "map": "Route 202", "offset": 0},
+    {"direction": "south", "map": "Route 219", "offset": 0},
+    {"direction": "west", "map": "Route 201", "offset": 0}
   ],
   "notes": [
-    {"text": "Read from the DP map of Sandgem Town (560 x 368 px); the tile grid starts 8 px in from the left edge, as on the route maps.", "source": "Bulbapedia DP map"},
-    {"text": "Buildings are blocked; each door is the tile walked into, on the building's front row. A fence runs west from the lab along row 6 to the map edge.", "source": "Bulbapedia DP map"},
-    {"text": "Exits: west rows 7..9 (Route 201); north (20..29, 0) (Route 202); south (20..25, 22) (the beach, Route 219, offset not known).", "source": "Bulbapedia DP map"},
-    {"text": "Walking south from Route 202 (30, 22) stops at (29, 2) above the Poke Mart; walking west from there stops at (20, 2). The lab's sign stands on row 7, in front of the fence: walking west along row 7 stops at it.", "source": "console (lab B)"},
-    {"text": "Joins: the 16 px strip at the right of the Route 201 image matches the left of this image, putting column 0 on Route 201's column 64; rows are 3 px apart, so the row comes from the edges: the lab fence (row 6) lines up with the fence post at the right of Route 201's row 3, and Route 201's open rows 4..6 meet rows 7..9 here (offset 3).", "source": "Bulbapedia DP map"},
-    {"text": "Route 202's image bottom matches this image's top 16 px to the right, so Route 202's column x + 1 is above column x here (offset -1); its open bottom row (25..30, 25) meets (24..29, 0). The 8 px overlap leaves a half-row doubt.", "source": "Bulbapedia DP map"},
-    {"text": "A youngster and two breeders wander south of the Poke Mart; they still need wander rectangles, measured on the console.", "source": "console (lab B)"}
-  ],
-  "image": {
-    "source": "https://archives.bulbagarden.net/wiki/File:Sandgem_Town_DP.png",
-    "origin": [8, 0],
-    "tile_px": 16
-  }
+    {"text": "generated by pokenav.cli.decomp from pret/pokediamond@b623abe: files/fielddata/land_data/land_data_release/narc_0007.bin, files/fielddata/mapmatrix/map_matrix/narc_0000.bin, files/fielddata/eventdata/zone_event_release/narc_0396.bin", "source": "pret/pokediamond@b623abe"},
+    {"text": "objects a story flag hides, not placed: rivel at (8, 10) (flag 437); var_0 at (8, 13) (flag 405)", "source": "decomp"},
+    {"text": "Tile (x, y) is world (160 + x, 832 + y) of pokediamond's matrix 0. The image-traced file this replaces had 12 px rows for 16 px columns, so its rows do not map one to one onto these; its rows 7 and up were already the decomp's (row y there is y + 4 here).", "source": "decomp comparison, 2026-10-31"},
+    {"text": "Console-verified anchors: the lab, Center and Mart doors on row 10, the Center and Mart signs (20, 10) and (25, 10), the lab sign at (5, 11) in front of the fence on row 10 (walking west along row 11 stops at (6, 11)), and the stops above the Mart (29, 5) and the Center (20, 5).", "source": "console (lab B)"},
+    {"text": "The road from Route 202 narrows from x 20..29 to 24..29 at row 6 in the decomp; the console stop 'above the Poke Mart' was written down one row further south in the image frame. Re-verify where a walk south along column 29 stops.", "source": "console (lab B) vs decomp"},
+    {"text": "The image file's notes had the Youngster and both Breeders wandering; in the decomp only the Youngster (boy2 at (27, 23)) wanders, the Breeders (man1 at (11, 22), woman1 at (23, 20)) stand still. Re-check on the console.", "source": "console (lab B) vs decomp"},
+    {"text": "Exits: west edge rows 10..15 to Route 201; north (24..29, 0) to Route 202; south (24..29, 31) to Route 219 (the beach).", "source": "decomp, read by hand"}
+  ]
 }
