@@ -2,7 +2,11 @@
   "format": "pokenav-map/1",
   "name": "Route 201",
   "game": "bdsp",
-  "encounters": ["grass"],
+  "source": "pret/pokediamond@b623abe: files/fielddata/land_data/land_data_release/narc_0005.bin, files/fielddata/land_data/land_data_release/narc_0006.bin, files/fielddata/mapmatrix/map_matrix/narc_0000.bin, files/fielddata/eventdata/zone_event_release/narc_0327.bin",
+  "status": "generated from the decomp; console-verified anchors: the Sandgem arrow sign (55, 11) and the open band of rows 10..13 that runs east to Sandgem; other checks pending",
+  "encounters": [
+    "grass"
+  ],
   "legend": {
     "#": {"blocked": true},
     ".": {},
@@ -14,18 +18,30 @@
     "################################################################",
     "################################################################",
     "################################################################",
-    "##########################################,.,,,,,,,,,...........",
+    "################################################################",
+    "################################################################",
+    "################################################################",
+    "################################################################",
+    "################################################################",
+    "################################################################",
+    "################################################################",
+    "##########################################,,,,,,,,,,,...........",
     "##########################################,,,,,,,,,,,..S........",
-    "##########################################,,,,,,,,,##...........",
-    "##..####..####....######..##....##..####..,,,,,,,,,##...........",
-    "##..####..####....######..##....##..####..,,,,,,,,,##vvvv.######",
+    "##########################################,,,,,,,,,,,...........",
+    "##########################################,,,,,,,,,,,...........",
+    "....####..........######..##....##..####..,,,,,,,,,##...........",
+    "....####..........######..##....##..####..,,,,,,,,,##...........",
+    "##........####............................,,,,,,,,,##vvvvv######",
     "##........####............................,,,,,,,,,##.....######",
-    "....####..................................,,,,,,,,,##.....######",
+    "..........................................,,,,,,,,,##.....######",
     "vvvv####vvvvvvvvvvvvvvvvvvvvvvvv........S.,,,,,,,,,##.....######",
     "....####............,,,,,,,,,,............................######",
     "....................,,,,,,,,,,............................######",
+    "....................,,,,,,,,,,............................######",
+    "....................,,,,,,,,,,............................######",
     "########.....S......##########............................######",
-    "##############....############################............######",
+    "########............##########............,,,,,,,,,,,,,,,,######",
+    "##############....############################,,,,,,,,,,,,######",
     "##############....############################,,,,,,,,,,,,######",
     "##############....##############################################",
     "##############....##############################################",
@@ -33,30 +49,33 @@
     "##############....##############################################"
   ],
   "points": [
-    {"name": "POTION_GIVER_TALK_FROM", "tile": [44, 3], "proof": "walking west along row 3 stops here, facing her"},
-    {"name": "POTION_GIVER_ROW_EAST", "tile": [53, 3], "note": "east end of her row, on the path"},
-    {"name": "POTION_GIVER_ROW_WEST_END", "tile": [42, 3]},
-    {"name": "POTION_GIVER_ROW_EAST_END", "tile": [52, 3]}
+    {"name": "POTION_GIVER_TALK_FROM", "tile": [45, 10], "proof": "walking west along row 10 stops here, facing the Potion giver on her decomp tile (44, 10)"},
+    {"name": "POTION_GIVER_ROW_WEST_END", "tile": [42, 10], "note": "west end of her row: the first tall grass tile"}
   ],
   "npcs": [
-    {"name": "potion_giver", "tile": [43, 3], "note": "Only turns. Talked to from (44, 3), facing west."}
+    {"name": "man1", "tile": [27, 22], "wander": {"low": [26, 21], "high": [28, 23]}, "note": "MAN1, WANDER_AROUND"},
+    {"name": "potion_giver", "tile": [44, 10], "facing": "south", "note": "SHOPM1, LOOK_SOUTH_AND_EAST. the Potion giver. Stands still in the decomp; on the console she wanders (8 runs), seen one tile either way, so a walk along row 10 stops wherever she is"},
+    {"name": "boy1", "tile": [57, 15], "facing": "west", "note": "BOY1, LOOK_WEST"},
+    {"name": "girl1", "tile": [46, 23], "wander": {"low": [44, 23], "high": [48, 23]}, "note": "GIRL1, WANDER_WEST_AND_EAST"}
+  ],
+  "signs": [
+    {"name": "arrow_signpost_1", "tile": [13, 24], "facing": "north", "note": "ARROW_SIGNPOST"},
+    {"name": "arrow_signpost_2", "tile": [55, 11], "facing": "north", "note": "ARROW_SIGNPOST"},
+    {"name": "trainer_tips_signpost", "tile": [40, 19], "facing": "north", "note": "TRAINER_TIPS_SIGNPOST"}
   ],
   "connections": [
-    {"direction": "east", "map": "Sandgem Town", "offset": -3},
-    {"direction": "west", "map": "Lake Verity", "offset": 0},
-    {"direction": "south", "map": "Twinleaf Town", "offset": 0}
+    {"direction": "east", "map": "Sandgem Town", "offset": 0},
+    {"direction": "south", "map": "Twinleaf Town", "offset": 0},
+    {"direction": "west", "map": "Verity Lakefront", "offset": -32}
   ],
   "notes": [
-    {"text": "Read from the DP map of Route 201 (1040 x 320 px). The tile grid starts 8 px in from the left edge: tile (x, y) covers pixels [8 + 16x, 24 + 16x) x [16y, 16y + 16). Trees sit about 3 px lower on their tiles than on the Route 202 map; tall grass and the Potion giver fit a grid with no vertical offset.", "source": "Bulbapedia DP map"},
-    {"text": "Trees: tiles under trunks or mostly under a canopy are blocked.", "source": "Bulbapedia DP map"},
-    {"text": "Ledges: row 10 west of the tall grass (unchecked), and (53..56, 7) in the north-east, which is one row higher than it looks on the DP map, as on Route 202.", "source": "console (lab B)"},
-    {"text": "Exits: west edge rows 9..12 to Lake Verity; south gap (14..17, 19) to Twinleaf Town; east edge rows 3..6 to Sandgem Town. The Lake Verity and Twinleaf offsets are not known.", "source": "Bulbapedia DP map"},
-    {"text": "No trainers. The other NPCs wander; the girl in the tall grass still needs a wander rectangle, measured on the console.", "source": "console (lab B)"},
-    {"text": "The Potion giver is at (44, 3) on the DP map but stands at (43, 3) on the console, in the top grass row.", "source": "console (lab B)"}
-  ],
-  "image": {
-    "source": "https://archives.bulbagarden.net/wiki/File:Sinnoh_Route_201_DP.png",
-    "origin": [8, 0],
-    "tile_px": 16
-  }
+    {"text": "generated by pokenav.cli.decomp from pret/pokediamond@b623abe: files/fielddata/land_data/land_data_release/narc_0005.bin, files/fielddata/land_data/land_data_release/narc_0006.bin, files/fielddata/mapmatrix/map_matrix/narc_0000.bin, files/fielddata/eventdata/zone_event_release/narc_0327.bin", "source": "pret/pokediamond@b623abe"},
+    {"text": "objects a story flag hides, not placed: rivel at (16, 23) (flag 400); doctor at (8, 21) (flag 406); var_0 at (8, 22) (flag 407)", "source": "decomp"},
+    {"text": "Tile (x, y) is world (96 + x, 832 + y) of pokediamond's matrix 0. The image-traced file this replaces had 12 px rows for 16 px columns, so its rows do not map one to one onto these: its row 3 is row 10 here, its row 13 row 24.", "source": "decomp comparison, 2026-10-31"},
+    {"text": "Console-verified anchors: the Sandgem arrow sign at (55, 11) (the image file's BORDER_SIGN), the band of rows 10..13 that runs east to Sandgem without a stop, and the Trainer Tips sign at (40, 19).", "source": "console (lab B)"},
+    {"text": "BDSP differs from the decomp: the Potion giver (shopm1 at (44, 10)) stands still in Diamond and Platinum but wanders in BDSP (8 runs).", "source": "console (lab B) vs decomp"},
+    {"text": "Exits: west edge rows 14, 15, 18 and 20..23 to Verity Lakefront (row 19 is a ledge); south gap (14..17, 25..31) to Twinleaf Town; east edge rows 10..15 to Sandgem Town. No trainers.", "source": "decomp, read by hand"},
+    {"text": "The image file's POTION_GIVER_ROW_EAST and POTION_GIVER_ROW_EAST_END marked the east end of its row; row 10 here runs on to Sandgem, so they are dropped.", "source": "decomp comparison, 2026-10-31"},
+    {"text": "Diamond's flag-hidden story objects differ slightly from Platinum's (Rowan at (8, 21) and the briefcase at (8, 22) against Platinum's (9, 21) and (16, 22)); none of them stand there outside the scene.", "source": "pret/pokediamond vs pret/pokeplatinum"}
+  ]
 }

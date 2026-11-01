@@ -2,7 +2,11 @@
   "format": "pokenav-map/1",
   "name": "Route 202",
   "game": "bdsp",
-  "encounters": ["grass"],
+  "source": "pret/pokediamond@b623abe: files/fielddata/land_data/land_data_release/narc_0014.bin, files/fielddata/mapmatrix/map_matrix/narc_0000.bin, files/fielddata/eventdata/zone_event_release/narc_0328.bin",
+  "status": "generated from the decomp; console-verified anchors: the south ledge and the trees at (20..21, 24), the sign (23, 25), SAVE_SPOT (29, 24), Natalie's challenge tile (21, 22), the exit to Jubilife (14, 0); other checks pending",
+  "encounters": [
+    "grass"
+  ],
   "legend": {
     "#": {"blocked": true},
     ".": {},
@@ -11,59 +15,67 @@
     "S": {"blocked": true, "behavior": "sign"}
   },
   "rows": [
-    "###########........#################",
-    "###########........#################",
-    "###########........#################",
-    "###########........#################",
-    "###,,,,,,........S..,,,,,......#####",
-    "###,,,,,,...........,,,,,......#####",
-    "####,,,,,...........,,,,,......#####",
-    "###,,,,,,.....########,,,......#####",
-    "#########.....########.........#####",
-    "#########vvvvv########vvvvvv...,,###",
-    "#######.......########,,,,,,,,,,,###",
-    "#######...........####,,,,,,,,,,,###",
-    "###...............####,,,,,,,,,,,###",
-    "###............S..####,,,,,,,,,,,###",
-    "###...............####,,,,,,,,,,,###",
-    "###....##.........####..,,,,,,,#####",
-    "###,,,,##...............,,,,,,,#####",
-    "###,,,,##....................,,#####",
-    "###,,,,##vvvvv########vvvvvvvvv#####",
-    "###,,,,##.....########.........#####",
-    "###,,,,,,......,,,,,,...S......#####",
-    "###,,,,,,......,,,,,,..........#####",
-    "###,,,,,,......,,,,,,..........#####",
-    "#####################..........#####",
-    "#####################..........#####",
-    "#########################......#####"
+    "##########........##############",
+    "##########........##############",
+    "##########........##############",
+    "##########........##############",
+    "##,,,,,,........S..,,,,,......##",
+    "##,,,,,,...........,,,,,......##",
+    "##.,,,,,...........,,,,,......##",
+    "##,,,,,,...........,,,,,......##",
+    "##,,,,,,...........,,,,,......##",
+    "##,,,,,,.....########.........##",
+    "########vvvvv########vvvvvv...,,",
+    "########.....########,,,,,,,,,,,",
+    "######.......########,,,,,,,,,,,",
+    "######...........####,,,,,,,,,,,",
+    "##...............####,,,,,,,,,,,",
+    "##...............####,,,,,,,,,,,",
+    "##............S..####,,,,,,,,,,,",
+    "##...............####,,,,,,,,,,,",
+    "##...............####..,,,,,,,,,",
+    "##,,,,##...............,,,,,,,,,",
+    "##,,,,##.................,,,,,,,",
+    "##,,,,##....................,,,,",
+    "##,,,,##......................##",
+    "##,,,,##vvvvv########vvvvvvvvv##",
+    "##,,,,##.....########.........##",
+    "##,,,,,,......,,,,,,...S......##",
+    "##,,,,,,......,,,,,,..........##",
+    "##,,,,,,......,,,,,,..........##",
+    "##,,,,,,......,,,,,,..........##",
+    "##,,,,,,......,,,,,,..........##",
+    "####################..........##",
+    "####################..........##"
   ],
   "points": [
-    {"name": "CATCH_SPOT", "tile": [19, 22], "proof": "walking east stops at the trees after 11 tiles; the sign at (24, 20) is 5 columns right and 2 rows up", "note": "bottom row of the tall grass at (15..20, 20..22), nearest the Sandgem entrance"},
-    {"name": "SAVE_SPOT", "tile": [30, 19], "proof": "under the south ledge's east end, against the east trees", "note": "the post-Potion save"},
-    {"name": "EXIT_JUBILIFE", "tile": [15, 0], "note": "the path in the middle of the 8-tile gap at (11..18, 0), pixel (256, 8)"}
+    {"name": "CATCH_SPOT", "tile": [18, 27], "proof": "walking east stops at the trees after 11 tiles; the sign at (23, 25) is 5 columns right and 2 rows up", "note": "in the tall grass (15..20, 25..29), nearest the Sandgem entrance"},
+    {"name": "SAVE_SPOT", "tile": [29, 24], "proof": "under the south ledge's east end, against the east trees", "note": "the post-Potion save"},
+    {"name": "EXIT_JUBILIFE", "tile": [14, 0], "note": "the middle of the 8-tile gap (10..17, 0); Jubilife's 3-wide neck is 3 rows further north"}
   ],
   "npcs": [
-    {"name": "trainer_c", "tile": [26, 4], "facing": "south", "sight": 4, "note": "blue cap, feet at about pixel (430, 77)"},
-    {"name": "trainer_b", "tile": [10, 7], "facing": "east", "sight": 4, "note": "blue cap, feet at about pixel (175, 125)"},
-    {"name": "trainer_a", "tile": [7, 11], "facing": "south", "sight": 4, "note": "blue cap, feet at about pixel (128, 186); holds the player like a wall walking north from (7, 12)"},
-    {"name": "trainer_d", "tile": [22, 15], "facing": "south", "sight": 4, "note": "the girl at pixel (365, 235); challenged the player at (22, 17), walking east along row 17"}
+    {"name": "trainer_a", "tile": [6, 13], "facing": "south", "sight": 5, "note": "BOY2, LOOK_SOUTH. holds the player like a wall walking north from (6, 14)"},
+    {"name": "trainer_d", "tile": [21, 18], "facing": "south", "sight": 4, "note": "GIRL1, LOOK_SOUTH. challenged the player at (21, 22), walking east along row 22: her sight reaches 4 tiles south"},
+    {"name": "trainer_c", "tile": [25, 4], "facing": "south", "sight": 5, "note": "BOY2, LOOK_SOUTH"},
+    {"name": "boy2_3", "tile": [9, 8], "wander": {"low": [8, 8], "high": [10, 8]}, "note": "BOY2, WANDER_WEST_AND_EAST"},
+    {"name": "monstarball", "tile": [2, 6], "note": "item ball; blocks its tile until picked up (flag 986)"}
+  ],
+  "signs": [
+    {"name": "arrow_signpost_1", "tile": [23, 25], "facing": "north", "note": "ARROW_SIGNPOST"},
+    {"name": "arrow_signpost_2", "tile": [16, 4], "facing": "north", "note": "ARROW_SIGNPOST"},
+    {"name": "trainer_tips_signpost", "tile": [14, 16], "facing": "north", "note": "TRAINER_TIPS_SIGNPOST"}
   ],
   "connections": [
-    {"direction": "south", "map": "Sandgem Town", "offset": 1},
-    {"direction": "north", "map": "Jubilife City", "offset": -30}
+    {"direction": "north", "map": "Jubilife City", "offset": -32},
+    {"direction": "south", "map": "Sandgem Town", "offset": 0}
   ],
   "notes": [
-    {"text": "Read from the DP map of Route 202 (592 x 416 px). The tile grid starts 8 px in from the left edge: tile (x, y) covers pixels [8 + 16x, 24 + 16x) x [16y, 16y + 16). The half tiles at both side edges are trees and are left out.", "source": "Bulbapedia DP map"},
-    {"text": "Trees: each tile under a trunk or a canopy that hides most of the ground is blocked; the thin top of a canopy that only overhangs the row above is not. The Poke Ball item at (3, 6) is blocked.", "source": "Bulbapedia DP map"},
-    {"text": "Ledges: rows 9 and 18. On the DP map the south ledge looks like row 19, but on the console the player stands at (22, 19) right under it, beside the trees at (21, 19), and the sign at (24, 20) is one row below.", "source": "console (lab B)"},
-    {"text": "The east tree wall comes in to column 31 at rows 15 to 17: walking east along row 16 stops at column 30 (run r75), and column 30 is open north to row 4.", "source": "console (lab B)"},
-    {"text": "NPCs stand on the tile under their feet; the sprites rise into the row above. Trainer facings are read from the sprites; the sight range of 4 is a guess.", "source": "Bulbapedia DP map"},
-    {"text": "The Jubilife City connection offset (-30) is an estimate from the stairs; Jubilife's rows 46..47 are drawn blocked, so the two maps are not joined in one world yet.", "source": "Bulbapedia DP map"}
-  ],
-  "image": {
-    "source": "https://archives.bulbagarden.net/wiki/File:Sinnoh_Route_202_DP.png",
-    "origin": [8, 0],
-    "tile_px": 16
-  }
+    {"text": "generated by pokenav.cli.decomp from pret/pokediamond@b623abe: files/fielddata/land_data/land_data_release/narc_0014.bin, files/fielddata/mapmatrix/map_matrix/narc_0000.bin, files/fielddata/eventdata/zone_event_release/narc_0328.bin", "source": "pret/pokediamond@b623abe"},
+    {"text": "objects a story flag hides, not placed: var_0 at (14, 27) (flag 422)", "source": "decomp"},
+    {"text": "Tile (x, y) is world (160 + x, 800 + y) of pokediamond's matrix 0. The image-traced file this replaces had 12 px rows for 16 px columns, so its rows do not map one to one onto these: its row 4 is row 4 here but its row 19 is row 24 and its row 22 row 27.", "source": "decomp comparison, 2026-10-31"},
+    {"text": "Console-verified anchors: standing at (21, 24) right under the south ledge beside the trees at (20, 24); the sign one row below at (23, 25); SAVE_SPOT (29, 24) with (30, 24) blocked; trainer_d's challenge at (21, 22); the exit to Jubilife at (14, 0).", "source": "console (lab B)"},
+    {"text": "Run r75: walking east along the row above the south ledge stops at column 29; in the decomp the east trees reach column 30 only on that row (22), column 31 on row 21 and column 32 above. If r75's row was higher, the decomp disagrees by a column: re-verify.", "source": "console (lab B) vs decomp"},
+    {"text": "Route 202 has three trainers (sight 5, 5 and 4 in the decomp; the image file guessed 4). The image file's trainer_b at its (10, 7) facing east is a plain Youngster wandering west-east at (9, 8), not a trainer.", "source": "decomp comparison, 2026-10-31"},
+    {"text": "The Potion ball at (2, 6) blocks its tile until picked up.", "source": "decomp, read by hand"}
+  ]
 }
